@@ -1,0 +1,12 @@
+# Videos sources (trop lourdes pour GitHub)
+videos_sources/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Fichiers temporaires
+*.tmp
+*.bak
+.DS_Store
+Thumbs.db
