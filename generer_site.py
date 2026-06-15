@@ -10,7 +10,7 @@
 # Produit : printnc-build.html (dans le dossier courant)
 # =========================================================================
 
-import csv, os
+import csv, os, re
 from collections import Counter
 
 CSV = os.path.join('data', 'videos.csv')
@@ -336,6 +336,12 @@ def construire():
         else:
             vid = ''
         texte = j.get('texte', '') or 'Etape de construction (video du jour)'
+        # Liens markdown [texte](url)
+        texte = re.sub(r'\[([^\]]+)\]\(([^)]+)\)',
+                       r'<a href="\2" target="_blank" rel="noopener">\1</a>', texte)
+        # URLs brutes (http/https) pas deja dans une balise
+        texte = re.sub(r'(?<!["\'>])(https?://[^\s<]+)',
+                       r'<a href="\1" target="_blank" rel="noopener">\1</a>', texte)
         blocks.append(f'''    <article class="item" data-phase="{j['phase']}" data-month="{m}">
       <div class="dot" style="background:{pi['color']}"></div>
       <div class="content">
@@ -428,6 +434,8 @@ MODELE = '''<!DOCTYPE html>
   .date{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums;}
   .tag{font-size:12px;padding:3px 10px;border-radius:12px;font-weight:600;}
   .text{font-size:16px;margin-bottom:12px;}
+  .text a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
+  .text a:hover{opacity:.7;}
   .vid{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;text-decoration:none;}
   .vid:hover{border-color:var(--orange);color:var(--text);}
   .play{color:var(--orange);font-size:11px;}

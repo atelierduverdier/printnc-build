@@ -48,6 +48,7 @@ Aussitôt, le 14 mars, j'enchaîne sur le boîtier électrique : découpe des go
 
 Le 30 mars, grande satisfaction : « Enfin mes moteurs tournent ! » Et le lendemain, les capteurs de fin de course fonctionnent. Ça sent la fin.
 
+![PrintNC - Arrière Nema23](photos/arriere_nema23.jpg)
 
 # Avril 2026 — Mise en route, et un coup dur
 

@@ -49,6 +49,8 @@
   .date{font-size:14px;color:var(--faint);font-variant-numeric:tabular-nums;}
   .tag{font-size:12px;padding:3px 10px;border-radius:12px;font-weight:600;}
   .text{font-size:16px;margin-bottom:12px;}
+  .text a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
+  .text a:hover{opacity:.7;}
   .vid{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--muted);cursor:pointer;transition:.15s;text-decoration:none;}
   .vid:hover{border-color:var(--orange);color:var(--text);}
   .play{color:var(--orange);font-size:11px;}
@@ -231,7 +233,7 @@
       <div class="dot" style="background:#EF9F27"></div>
       <div class="content">
         <div class="meta"><span class="date">14/06/2026</span><span class="tag" style="background:rgba(239,159,39,.12);color:#EF9F27">Electronique</span></div>
-        <p class="text">Récupération des données du VFD HY via un script Python</p>
+        <p class="text">Récupération des données du VFD HY via un <a href="https://github.com/atelierduverdier/huanyang-vfd-reader" target="_blank" rel="noopener">script</a> Python</p>
         <a class="vid-thumb" href="https://www.instagram.com/atelierduverdier/reel/DZkzFICoyeM/" target="_blank" rel="noopener" title="Voir la video"><img src="miniatures/atelierduverdier_1781458779_3919482228322805644_71111816195.jpg" loading="lazy" alt="Miniature 14/06/2026" onerror="this.parentNode.classList.add('noimg')"><span class="overlay"><span class="play">&#9654;</span></span></a>
       </div>
     </article>
@@ -2133,6 +2135,7 @@
 <p class="recit-p">Aussitôt, le 14 mars, j'enchaîne sur le boîtier électrique : découpe des goulottes, première « connerie » assumée avec humour, positionnement des perçages à la CNC, et début du câblage. L'atelier n'est pas aussi rangé que dans les vidéos YouTube — « Moi c'est... Moi » — mais ça avance.</p>
 <figure class="doc-photo"><img src="photos/montage_boitier_electrique.jpg" alt="PrintNC - Montage du boîtier électrique" loading="lazy"><figcaption>PrintNC - Montage du boîtier électrique</figcaption></figure>
 <p class="recit-p">Le 30 mars, grande satisfaction : « Enfin mes moteurs tournent ! » Et le lendemain, les capteurs de fin de course fonctionnent. Ça sent la fin.</p>
+<figure class="doc-photo"><img src="photos/arriere_nema23.jpg" alt="PrintNC - Arrière Nema23" loading="lazy"><figcaption>PrintNC - Arrière Nema23</figcaption></figure>
 <h3 class="recit-h">Avril 2026 — Mise en route, et un coup dur</h3>
 <p class="recit-p">Le mois d'avril s'ouvre sur de belles réussites : boîtier électrique terminé, première mise en route de la broche, activation du RS485 pour contrôler la vitesse de broche. Je commence à explorer LinuxCNC avec le firmware remora-flexi et l'interface QtDragon HD sur Raspberry Pi 4.</p>
 <p class="recit-p">Le 8 avril, c'est la « VICTOIRE » : les moteurs tournent enfin sous LinuxCNC (avec un remerciement à Jean-François). Je réalise une longue démo de QtDragon.</p>
