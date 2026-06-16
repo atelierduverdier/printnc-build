@@ -291,7 +291,8 @@ def construire():
     # Onglets mensuels (uniques, dans l'ordre)
     mois_presents = sorted(set(j['date'][:7] for j in jalons), reverse=True)
     onglets_principaux = [
-        '      <button class="tab active" data-month="all">Tout</button>',
+        '      <button class="tab tab-accueil active" data-month="accueil">Accueil</button>',
+        '      <button class="tab" data-month="all">Timeline</button>',
         '      <button class="tab tab-recit" data-month="recit">Le récit</button>',
         '      <button class="tab tab-maj" data-month="maj">Mises à jour</button>',
         '      <button class="tab tab-doc" data-month="doc">Documentation</button>',
@@ -478,6 +479,36 @@ MODELE = '''<!DOCTYPE html>
   .maj-desc a:hover, .doc-important a:hover{opacity:.7;}
   .tab-doc{border-color:var(--orange);color:var(--orange);}
   .tab-gloss{border-color:var(--orange);color:var(--orange);}
+  .tab-accueil{border-color:var(--orange);color:var(--orange);}
+  .tab-accueil.active{background:var(--orange);color:#13110e;}
+  /* Page accueil */
+  #accueil{display:none;padding:24px 0 50px;}
+  #accueil.show{display:block;}
+  .hero{display:flex;gap:28px;align-items:center;margin-bottom:44px;flex-wrap:wrap;}
+  .hero-img{width:340px;max-width:100%;border-radius:14px;border:1px solid var(--line);object-fit:cover;}
+  .hero-text{flex:1;min-width:260px;}
+  .hero-titre{font-size:30px;margin:0 0 12px;color:var(--text);font-weight:600;}
+  .hero-sous{font-size:16px;color:var(--muted);line-height:1.6;margin:0 0 20px;}
+  .hero-liens{display:flex;gap:10px;flex-wrap:wrap;}
+  .hero-btn{display:inline-block;padding:9px 16px;background:var(--orange);color:#13110e;border-radius:8px;text-decoration:none;font-size:14px;font-weight:500;transition:.15s;}
+  .hero-btn:hover{opacity:.85;}
+  .hero-btn.alt{background:transparent;border:1px solid var(--orange);color:var(--orange);}
+  .accueil-h{font-size:20px;color:var(--orange);margin:40px 0 18px;font-weight:600;}
+  .accueil-p{font-size:15px;color:var(--muted);line-height:1.6;margin:0 0 18px;}
+  .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
+  .spec{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;}
+  .spec-val{font-size:18px;color:var(--text);font-weight:600;margin-bottom:4px;}
+  .spec-lbl{font-size:13px;color:var(--faint);}
+  .cartes{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+  .carte{text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;cursor:pointer;transition:.15s;font-family:inherit;}
+  .carte:hover{border-color:var(--orange);transform:translateY(-2px);}
+  .carte-titre{font-size:16px;color:var(--orange);font-weight:600;margin-bottom:6px;}
+  .carte-desc{font-size:14px;color:var(--muted);line-height:1.5;}
+  .ressources{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;}
+  .ressource{display:block;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;text-decoration:none;transition:.15s;}
+  .ressource:hover{border-color:var(--orange);transform:translateY(-2px);}
+  .ressource-titre{font-size:15px;color:var(--orange);font-weight:600;margin-bottom:6px;font-family:monospace;}
+  .ressource-desc{font-size:13px;color:var(--muted);line-height:1.5;}
   .tab-gloss.active{background:var(--orange);color:#13110e;}
   .tab-doc.active{background:var(--orange);color:#13110e;}
   #doc{display:none;padding:30px 0 60px;max-width:720px;}
@@ -518,7 +549,7 @@ MODELE = '''<!DOCTYPE html>
   .lightbox-close:hover{opacity:1;color:var(--orange);}
   .lightbox-caption{position:fixed;bottom:20px;left:0;right:0;text-align:center;color:var(--muted);font-size:14px;font-style:italic;pointer-events:none;}
   @media print{
-    .nav,.filters,.theme-toggle,.tab-actions,.recit-progress,.github-ribbon,#tl,#recit,#maj,footer{display:none!important;}
+    .nav,.filters,.theme-toggle,.tab-actions,.recit-progress,.github-ribbon,#tl,#recit,#maj,#accueil,footer{display:none!important;}
     #doc{display:block!important;max-width:100%!important;}
     .doc-section{border:none!important;margin-bottom:12px!important;}
     .doc-section-titre{background:none!important;border-bottom:1px solid #ccc!important;}
@@ -596,6 +627,64 @@ __ONGLETS__
 <div class="github-ribbon"><a href="https://github.com/atelierduverdier" target="_blank" rel="noopener">GitHub</a></div>
 <div class="recit-progress" id="recit-progress"></div>
 <main class="wrap">
+  <section id="accueil">
+    <div class="hero">
+      <img class="hero-img" src="photos/printnc.jpg" alt="PrintNC de l'Atelier du Verdier" onerror="this.style.display='none'">
+      <div class="hero-text">
+        <h1 class="hero-titre">PrintNC — Atelier du Verdier</h1>
+        <p class="hero-sous">Journal de construction d'une fraiseuse CNC PrintNC, de la première pièce au premier copeau. Documentation complète, ouverte et reproductible.</p>
+      </div>
+    </div>
+
+    <h2 class="accueil-h">Caractéristiques en un coup d'œil</h2>
+    <div class="specs">
+      <div class="spec"><div class="spec-val">~1275 × 1275 mm</div><div class="spec-lbl">Zone de travail (chassis)</div></div>
+      <div class="spec"><div class="spec-val">8000 mm/min</div><div class="spec-lbl">Vitesse de travail X/Y</div></div>
+      <div class="spec"><div class="spec-val">0.03–0.1 mm</div><div class="spec-lbl">Précision typique</div></div>
+      <div class="spec"><div class="spec-val">2.2 kW</div><div class="spec-lbl">Broche G-Penny ER20</div></div>
+      <div class="spec"><div class="spec-val">24000 tr/min</div><div class="spec-lbl">Vitesse broche max</div></div>
+      <div class="spec"><div class="spec-val">Nema 23</div><div class="spec-lbl">Moteurs boucle fermée</div></div>
+      <div class="spec"><div class="spec-val">LinuxCNC 2.9.8</div><div class="spec-lbl">QtDragon HD + FlexiHAL</div></div>
+      <div class="spec"><div class="spec-val">~4046 €</div><div class="spec-lbl">Budget total du projet</div></div>
+    </div>
+
+    <h2 class="accueil-h">Explorer le site</h2>
+    <div class="cartes">
+      <button class="carte" onclick="document.querySelector('.tab[data-month=&quot;recit&quot;]').click()">
+        <div class="carte-titre">Le récit</div>
+        <div class="carte-desc">L'histoire complète de la construction, mois par mois, avec les galères et les victoires.</div>
+      </button>
+      <button class="carte" onclick="document.querySelector('.tab[data-month=&quot;all&quot;]').click()">
+        <div class="carte-titre">Timeline</div>
+        <div class="carte-desc">Le journal vidéo quotidien, étape par étape, de janvier à aujourd'hui.</div>
+      </button>
+      <button class="carte" onclick="document.querySelector('.tab[data-month=&quot;doc&quot;]').click()">
+        <div class="carte-titre">Documentation</div>
+        <div class="carte-desc">BOM détaillée, câblage, configuration LinuxCNC, paramètres VFD, maintenance.</div>
+      </button>
+      <button class="carte" onclick="document.querySelector('.tab[data-month=&quot;gloss&quot;]').click()">
+        <div class="carte-titre">Glossaire</div>
+        <div class="carte-desc">Tous les termes techniques expliqués : HAL, REMAP, VFD, G-code, tandem Y...</div>
+      </button>
+    </div>
+
+    <h2 class="accueil-h">Fichiers et ressources</h2>
+    <p class="accueil-p">Tout le projet est open source. Les dépôts GitHub contiennent la configuration LinuxCNC complète, les macros G-code, le code du site et l'outil de lecture du VFD :</p>
+    <div class="ressources">
+      <a class="ressource" href="https://github.com/atelierduverdier/printnc-config" target="_blank" rel="noopener">
+        <div class="ressource-titre">printnc-config</div>
+        <div class="ressource-desc">Configuration LinuxCNC : fichiers HAL, INI, macros G-code (toolchange, palpage...).</div>
+      </a>
+      <a class="ressource" href="https://github.com/atelierduverdier/printnc-build" target="_blank" rel="noopener">
+        <div class="ressource-titre">printnc-build</div>
+        <div class="ressource-desc">Le code de ce site et les outils de génération (Python, scripts).</div>
+      </a>
+      <a class="ressource" href="https://github.com/atelierduverdier/huanyang-vfd-reader" target="_blank" rel="noopener">
+        <div class="ressource-titre">huanyang-vfd-reader</div>
+        <div class="ressource-desc">Outil Python pour lire les paramètres d'un VFD Huanyang en HYComm (RS485).</div>
+      </a>
+    </div>
+  </section>
   <div class="timeline" id="tl">
 __BLOCKS__
     <div class="empty" id="empty">Aucune etape pour cette combinaison.</div>
@@ -664,11 +753,19 @@ __DOC__
     tabs.forEach(x=>x.classList.remove('active'));t.classList.add('active');
     const maj=document.getElementById('maj');
     const doc=document.getElementById('doc');
+    const accueil=document.getElementById('accueil');
     const moisRow=document.querySelector('.tabs-mois');
     const hideSecondary=()=>{
       if(moisRow) moisRow.style.display='none';
       document.getElementById('print-btn').style.display='none';
     };
+    if(t.dataset.month==='accueil'){
+      tl.style.display='none';phasesBar.style.display='none';recit.classList.remove('show');maj.classList.remove('show');doc.classList.remove('show');
+      accueil.classList.add('show');
+      hideSecondary();
+      window.scrollTo({top:0,behavior:'smooth'});return;
+    }
+    accueil.classList.remove('show');
     if(t.dataset.month==='recit'){
       tl.style.display='none';phasesBar.style.display='none';maj.classList.remove('show');doc.classList.remove('show');recit.classList.add('show');
       hideSecondary();
@@ -702,7 +799,7 @@ __DOC__
       document.getElementById('print-btn').style.display='';
       window.scrollTo({top:0,behavior:'smooth'});return;
     }
-    // Onglets timeline (Tout + mois)
+    // Onglets timeline (Timeline + mois)
     tl.style.display='';phasesBar.style.display='';
     recit.classList.remove('show');maj.classList.remove('show');doc.classList.remove('show');
     if(moisRow) moisRow.style.display='';
@@ -769,6 +866,12 @@ __DOC__
   lbClose.addEventListener('click',closeLightbox);
   lightbox.addEventListener('click',e=>{if(e.target===lightbox)closeLightbox();});
   document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
+
+  // Afficher la page d'accueil par defaut au chargement
+  (function(){
+    const tabAccueil=document.querySelector('.tab[data-month="accueil"]');
+    if(tabAccueil) tabAccueil.click();
+  })();
 </script>
 </body>
 </html>'''
