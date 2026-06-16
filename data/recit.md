@@ -20,6 +20,11 @@ Le mois de février est largement consacré à l'axe Z, et il me donne du fil à
 C'est une succession de tentatives : une plaque réalisée « non sans mal » avec des défauts rattrapés, un problème d'entraxe de 2,5 mm entre le porte-moteur et la vis, des réimpressions 3D, des tests sur bois avant de passer à l'aluminium. Le 13 février, je lâche un « j'espère que c'est la bonne cette fois !! » qui en dit long sur la persévérance nécessaire. Et le 14 février, enfin : « Je suis enfin parvenu à faire mon axe Z, non sans mal. »
 
 ![PrintNC - Usinage plaque Z](photos/usinage_plaque_z.jpg)
+![PrintNC - Positionnement des rails](photos/rail.jpg)
+![PrintNC - Prémontage](photos/premontage.jpg)
+![PrintNC - Prémontage](photos/premontage2.jpg)
+![PrintNC - Prémontage](photos/premontage3.jpg)
+![PrintNC - Prémontage](photos/premontage4.jpg)
 
 En parallèle, je m'attaque à l'esthétique et aux détails : démontage complet pour la peinture (sous-couche puis une belle couche orange), réalisation d'un gabarit de perçage imprimé en 3D pour fixer le porte-broche au bon endroit, et réglage du porte-broche en m'appuyant sur le wiki PrintNC.
 
@@ -30,11 +35,6 @@ Fin février, le matériel sérieux entre en scène. Je nettoie la broche G-Penn
 # Mars 2026 — Le montage mécanique et le début de l'électrique
 
 Mars marque le vrai assemblage. Montage avec des vis de 6 mm et rondelles frein, réglage de l'axe X, et surtout un principe de méthode : ne pas serrer définitivement les vis avant d'avoir réglé l'équerrage. La mise en butée pour l'équerrage, les réglages divers... c'est minutieux.
-![PrintNC - Positionnement des rails](photos/rail.jpg)
-![PrintNC - Prémontage](photos/premontage.jpg)
-![PrintNC - Prémontage](photos/premontage2.jpg)
-![PrintNC - Prémontage](photos/premontage3.jpg)
-![PrintNC - Prémontage](photos/premontage4.jpg)
 
 L'aluminium me résiste : après plusieurs tentatives et un certain énervement, je finis par renoncer à usiner certaines pièces en alu sur l'ancienne machine et je reviens à des platines imprimées en 3D. « Échec total de mes platines en aluminium, je remets mes platines en 3D. » Mais comme je le note moi-même : « Dans les échecs il y a toujours du bon. » L'embase en aluminium est même remplacée par un tube d'acier coupé, dans l'esprit costaud de la machine.
 
@@ -47,8 +47,6 @@ Aussitôt, le 14 mars, j'enchaîne sur le boîtier électrique : découpe des go
 ![PrintNC - Montage du boîtier électrique](photos/montage_boitier_electrique.jpg)
 
 Le 30 mars, grande satisfaction : « Enfin mes moteurs tournent ! » Et le lendemain, les capteurs de fin de course fonctionnent. Ça sent la fin.
-
-![PrintNC - Arrière Nema23](photos/arriere_nema23.jpg)
 
 # Avril 2026 — Mise en route, et un coup dur
 

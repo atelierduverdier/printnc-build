@@ -315,7 +315,9 @@ def construire():
         m = j['date'][:7]
         if m != cur:
             cur = m
-            mi = mois_info.get(m, {'nom': m, 'titre': '', 'desc': ''})
+            # Nom par defaut intelligent : "Juillet 2026" au lieu de "2026-07"
+            nom_defaut = f"{mois_onglet.get(m[5:7], m)} {m[:4]}"
+            mi = mois_info.get(m, {'nom': nom_defaut, 'titre': '', 'desc': ''})
             blocks.append(f'''    <section class="month" data-month="{m}">
       <div class="mhead">
         <div class="mnom">{mi['nom']}</div>
