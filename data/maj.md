@@ -1,3 +1,56 @@
+# 16 juin 2026 — VFD HuangYang en HYComm et refroidissement broche
+
+## Lecture des paramètres du VFD via le protocole HYComm
+Le VFD HuangYang 2.2 kW n'utilise pas le Modbus RTU standard mais son propre protocole série, le HYComm. Un script Modbus classique (minimalmodbus) reste muet : le VFD ne répond pas. Après analyse des trames échangées, le format de lecture d'un paramètre PD a été identifié :
+```
+Requete  : [adresse][0x01][0x03][numero_PD][0x00][0x00][CRC16]
+Reponse  : [adresse][0x01][longueur][numero_PD][valeur...][CRC16]
+```
+La longueur vaut 0x03 (PD + 2 octets de valeur) ou 0x02 (PD + 1 octet). La validation se fait par le CRC16 et par l'écho du numéro de PD dans la réponse. Un script Python (lire_vfd.py) lit ainsi les paramètres PD000 à PD189 et les enregistre dans un fichier texte. Lecture seule, LinuxCNC doit être arrêté (le composant hy_vfd occupe sinon le port /dev/ttyAMA2). Outil publié sur GitHub : github.com/atelierduverdier/huanyang-vfd-reader.
+
+## Paramètres VFD relevés et documentés
+Valeurs principales lues sur la machine : fréquence max 400 Hz (PD005), tension max 220 V (PD008), moteur 220 V / 9 A / 2 pôles / 3000 tr/min à 50 Hz (PD141-144), communication adresse 1, 9600 bauds, 8N1 RTU (PD163-165). Documentés dans la section "Paramètres du VFD" du site.
+
+## Accélération / décélération VFD portées à 3 s
+PD014 (accélération) et PD015 (décélération) étaient à 1.5 s. Passés à 3 s pour ménager la broche : une décélération trop rapide renvoie de l'énergie sur le bus DC du VFD (risque de défaut surtension OU) et sollicite les roulements. 3 s élimine ce risque tout en restant confortable.
+
+## Refroidissement broche : pompe (flood) + ventilateurs (AUX2) liés, avec post-refroidissement
+La pompe à eau (sortie FLOOD / COOLANT, M8) et les ventilateurs (AUX2) sont désormais pilotés ensemble par un signal commun, avec maintien après l'arrêt de la broche pour évacuer la chaleur résiduelle.
+
+Comportement :
+- M3 (broche ON) ou M8 : pompe + ventilateurs démarrent immédiatement.
+- M5 (broche OFF) ou M9 : pompe + ventilateurs restent actifs encore 30 s, puis s'arrêtent ensemble.
+- Bouton AUX2 et M64 P2 / M65 P2 : commande manuelle des ventilateurs (inchangé).
+
+Réalisation avec un composant timedelay (post-refroidissement) et deux or2 en cascade. Dans remora-flexi.hal :
+```hal
+loadrt or2 names=aux0_or,aux1_or,aux2_or,aux3_or,cool_or1,cool_or2
+loadrt timedelay names=spindle_cooldown
+addf cool_or1 servo-thread
+addf cool_or2 servo-thread
+addf spindle_cooldown servo-thread
+
+setp spindle_cooldown.on-delay 0
+setp spindle_cooldown.off-delay 30
+net spindle-on => spindle_cooldown.in
+
+# FLOOD = M8 OU post-refroidissement broche
+net coolant-m8 iocontrol.0.coolant-flood => cool_or1.in0
+net spindle-cooldown spindle_cooldown.out => cool_or1.in1
+net cooling-active cool_or1.out => flexi.output.COOLANT
+```
+Dans custom_postgui.hal :
+```hal
+# AUX2 (ventilateurs) = (bouton OU M64) OU refroidissement actif
+net aux2-or-out aux2_or.out => cool_or2.in0
+net cooling-active => cool_or2.in1
+net aux2-out cool_or2.out => flexi.output.AUX2
+```
+Le délai se règle avec setp spindle_cooldown.off-delay (en secondes). Piège rencontré : on ne peut pas relier deux fois le pin iocontrol.0.coolant-flood (déjà lié au signal flood) ; il faut réutiliser le signal existant, pas le pin.
+
+## Correction affectation AUX2
+Le tableau d'affectation indiquait AUX2 = pompe à eau. En réalité AUX2 = ventilateurs broche, et la pompe est sur la sortie FLOOD (COOLANT). Documents AFFECTATION_AUX.md et tableau corrigés.
+
 # 13 juin 2026 — Télécommande RJ45 et bugs HAL CYCLE_START / HOLD
 
 ## Bug CYCLE_START : le programme redémarrait en boucle, Stop ne tenait pas
