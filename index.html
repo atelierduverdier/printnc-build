@@ -4,6 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrintNC &mdash; Journal de construction | Atelier du Verdier</title>
+<meta name="description" content="Construction complète d'une fraiseuse CNC PrintNC : journal vidéo, documentation technique (BOM, câblage, LinuxCNC, VFD), récit et configuration open source.">
+<meta name="author" content="Atelier du Verdier">
+<meta name="keywords" content="PrintNC, CNC, LinuxCNC, FlexiHAL, fraiseuse, DIY, Atelier du Verdier, build log, QtDragon, VFD Huanyang">
+<!-- Open Graph / Facebook / Discord -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="PrintNC — Journal de construction | Atelier du Verdier">
+<meta property="og:description" content="Construction complète d'une fraiseuse CNC PrintNC : journal vidéo, documentation technique, récit et configuration open source.">
+<meta property="og:image" content="https://atelierduverdier.github.io/printnc-build/photos/printnc.jpg">
+<meta property="og:url" content="https://atelierduverdier.github.io/printnc-build/">
+<meta property="og:locale" content="fr_FR">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PrintNC — Journal de construction">
+<meta name="twitter:description" content="Construction complète d'une fraiseuse CNC PrintNC, open source.">
+<meta name="twitter:image" content="https://atelierduverdier.github.io/printnc-build/photos/printnc.jpg">
+<!-- GoatCounter analytics (privacy-friendly, sans cookies) -->
+<script data-goatcounter="https://atelierduverdier.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <style>
   :root{--bg:#13110e;--surface:#1c1916;--text:#f0ebe2;--muted:#a89e8c;--faint:#6b6356;--orange:#e8821e;--line:#332d24;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -18,6 +35,8 @@
   .stats{display:flex;gap:40px;margin-top:36px;flex-wrap:wrap;}
   .stat .n{font-size:32px;font-weight:700;}
   .stat .l{font-size:13px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;}
+  .stat-hero .n{color:var(--orange);}
+  .stat-hero .l{text-transform:none;letter-spacing:0;color:var(--muted);font-size:14px;font-style:italic;}
   .nav{position:sticky;top:0;background:rgba(19,17,14,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10;}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 6px;}
   .tabs-mois{display:flex;gap:6px;flex-wrap:wrap;padding:4px 20px 10px;border-top:1px solid var(--line);}
@@ -97,7 +116,8 @@
   #accueil{display:none;padding:24px 0 50px;}
   #accueil.show{display:block;}
   .hero{display:flex;gap:28px;align-items:center;margin-bottom:44px;flex-wrap:wrap;}
-  .hero-img{width:340px;max-width:100%;border-radius:14px;border:1px solid var(--line);object-fit:cover;}
+  .hero-img{width:340px;max-width:100%;border-radius:14px;border:1px solid var(--line);object-fit:cover;cursor:zoom-in;transition:.2s;}
+  .hero-img:hover{border-color:var(--orange);opacity:.92;}
   .hero-text{flex:1;min-width:260px;}
   .hero-titre{font-size:30px;margin:0 0 12px;color:var(--text);font-weight:600;}
   .hero-sous{font-size:16px;color:var(--muted);line-height:1.6;margin:0 0 20px;}
@@ -107,6 +127,8 @@
   .hero-btn.alt{background:transparent;border:1px solid var(--orange);color:var(--orange);}
   .accueil-h{font-size:20px;color:var(--orange);margin:40px 0 18px;font-weight:600;}
   .accueil-p{font-size:15px;color:var(--muted);line-height:1.6;margin:0 0 18px;}
+  .accueil-p a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
+  .accueil-p a:hover{opacity:.7;}
   .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
   .spec{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;}
   .spec-val{font-size:18px;color:var(--text);font-weight:600;margin-bottom:4px;}
@@ -198,6 +220,9 @@
   .social a{color:var(--faint);transition:.2s;display:flex;}
   .social a:hover{color:var(--orange);transform:translateY(-2px);}
   .footer-text{font-size:13px;}
+  .footer-counter{margin-top:14px;opacity:.6;transition:.2s;}
+  .footer-counter:hover{opacity:1;}
+  .footer-counter img{max-height:28px;}
 </style>
 </head>
 <body>
@@ -209,9 +234,7 @@
     <h1>Journal de construction</h1>
     <p class="sub">L'histoire complète d'une fraiseuse CNC construite de zero, du premier montage à blanc jusqu'à la machine pleinement fonctionnelle.</p>
     <div class="stats">
-      <div class="stat"><div class="n">5</div><div class="l">mois de travail</div></div>
-      <div class="stat"><div class="n">1275&times;1275</div><div class="l">surface (mm)</div></div>
-      <div class="stat"><div class="n">8000</div><div class="l">mm/min</div></div>
+      <div class="stat stat-hero"><div class="n">5 mois</div><div class="l">de patience, d'essais et de copeaux — janvier à juin 2026</div></div>
     </div>
   </div>
 </header>
@@ -254,12 +277,15 @@
 <main class="wrap">
   <section id="accueil">
     <div class="hero">
-      <img class="hero-img" src="photos/printnc.jpg" alt="PrintNC de l'Atelier du Verdier" onerror="this.style.display='none'">
+      <img class="hero-img" src="photos/printnc.jpg" alt="PrintNC — Atelier du Verdier" onerror="this.style.display='none'">
       <div class="hero-text">
         <h1 class="hero-titre">PrintNC — Atelier du Verdier</h1>
         <p class="hero-sous">Journal de construction d'une fraiseuse CNC PrintNC, de la première pièce au premier copeau. Documentation complète, ouverte et reproductible.</p>
       </div>
     </div>
+
+    <h2 class="accueil-h">À propos de la PrintNC</h2>
+    <p class="accueil-p">La PrintNC est une fraiseuse CNC DIY haute performance conçue autour d'un châssis acier rigide et de pièces imprimées en 3D pour faciliter l'assemblage. Lancée fin 2019 par la communauté <a href="https://wiki.printnc.info" target="_blank" rel="noopener">printnc.info</a>, elle compte aujourd'hui des centaines de machines construites dans le monde, sous licence ouverte CC BY 4.0. Pensée pour le bois et l'aluminium (et l'acier à l'occasion), elle vise une précision typique de 0.03 à 0.1 mm. Mon exemplaire est une adaptation de la V3 avec broche 2.2 kW, motorisation Nema 23 en boucle fermée et électronique pilotée par LinuxCNC.</p>
 
     <h2 class="accueil-h">Caractéristiques en un coup d'œil</h2>
     <div class="specs">
@@ -294,8 +320,12 @@
     </div>
 
     <h2 class="accueil-h">Fichiers et ressources</h2>
-    <p class="accueil-p">Tout le projet est open source. Les dépôts GitHub contiennent la configuration LinuxCNC complète, les macros G-code, le code du site et l'outil de lecture du VFD :</p>
+    <p class="accueil-p">Tout le projet est open source. Les plans d'origine de la PrintNC viennent du wiki communautaire ; mes adaptations, configuration et outils sont sur GitHub :</p>
     <div class="ressources">
+      <a class="ressource" href="https://wiki.printnc.info" target="_blank" rel="noopener">
+        <div class="ressource-titre">wiki.printnc.info</div>
+        <div class="ressource-desc">Le wiki officiel du projet PrintNC : plans, BOM de référence, guides de montage et toute la communauté.</div>
+      </a>
       <a class="ressource" href="https://github.com/atelierduverdier/printnc-config" target="_blank" rel="noopener">
         <div class="ressource-titre">printnc-config</div>
         <div class="ressource-desc">Configuration LinuxCNC : fichiers HAL, INI, macros G-code (toolchange, palpage...).</div>
@@ -315,17 +345,9 @@
       <div class="mhead">
         <div class="mnom">Juin 2026</div>
         <h2 class="mtitre">ATC, relais et interface</h2>
-        <p class="mdesc">Accessoires, automatismes et personnalisation de QtDragon. <span class="mcount">16 etapes</span></p>
+        <p class="mdesc">Accessoires, automatismes et personnalisation de QtDragon. <span class="mcount">15 etapes</span></p>
       </div>
     </section>
-    <article class="item" data-phase="soft" data-month="2026-06">
-      <div class="dot" style="background:#1D9E75"></div>
-      <div class="content">
-        <div class="meta"><span class="date">15/06/2026</span><span class="tag" style="background:rgba(29,158,117,.12);color:#1D9E75">LinuxCNC</span></div>
-        <p class="text">Récupération des données du VFD HY via un script python Fantastique <a href="https://github.com/atelierduverdier/huanyang-vfd-reader" target="_blank" rel="noopener">https://github.com/atelierduverdier/huanyang-vfd-reader</a></p>
-        <a class="vid-thumb" href="https://www.instagram.com/atelierduverdier/reel/DZkzFICoyeM/" target="_blank" rel="noopener" title="Voir la video"><img src="miniatures/atelierduverdier_1781458779_3919482228322805644_71111816195.jpg" loading="lazy" alt="Miniature 15/06/2026" onerror="this.parentNode.classList.add('noimg')"><span class="overlay"><span class="play">&#9654;</span></span></a>
-      </div>
-    </article>
     <article class="item" data-phase="elec" data-month="2026-06">
       <div class="dot" style="background:#EF9F27"></div>
       <div class="content">
@@ -2420,6 +2442,34 @@ NUM_DIO = 4</pre>
 <ul class="doc-liste"><li>Contacteur ABB AF09-30-10-11 avec bobine 24 V pour la coupure générale de l'armoire.</li><li>Chaîne d'arrêt d'urgence câblée sur la carte.</li><li>Capteurs de fin de course de proximité inductifs, type NPN NC (normalement ferme), alimentes en 24 V.</li></ul>
 <figure class="doc-photo"><img src="photos/capteur2.jpg" alt="Capteur LJ8A3-2-Z/AX" loading="lazy"><figcaption>Capteur LJ8A3-2-Z/AX</figcaption></figure>
 <figure class="doc-photo"><img src="photos/contacteur.jpg" alt="Alimentation 5V, Contacteur 24V/230V, Filtre anti-parasite" loading="lazy"><figcaption>Alimentation 5V, Contacteur 24V/230V, Filtre anti-parasite</figcaption></figure></div></details>
+<details class="doc-section"><summary class="doc-section-titre">Choix de conception</summary><div class="doc-section-corps"><p class="maj-desc">Quelques décisions de conception du projet PrintNC qui peuvent surprendre au premier abord, mais qui sont issues de nombreuses itérations de la communauté.</p>
+<h3 class="doc-sous-titre">Un seul patin par rail (et non deux)</h3>
+<p class="maj-desc">Les premières versions de la PrintNC utilisaient deux patins par rail. Le passage à un seul patin a été un choix réfléchi, validé par des centaines de machines construites :</p>
+<ul class="doc-liste"><li><strong>Pas de perte de performance</strong> : les rails HGR20 sont surdimensionnés pour le poids du portique et les forces d'usinage d'un routeur DIY. La flexion ne vient pas des rails.</li><li><strong>Coût réduit</strong> : 6 patins HGW20 au lieu de 12.</li><li><strong>Plus grande surface de travail</strong> : chaque patin supplémentaire réduit la course utile du rail d'environ 80 mm (avec son graisseur).</li><li><strong>Construction simplifiée</strong> : moins de trous percés/taraudés, moins de risques de blocage par défaut d'alignement.</li></ul>
+<p class="maj-desc">Sur le très long terme, deux patins augmenteraient la durée de vie des rails — mais l'usage en routeur hobbyiste reste très en deçà du régime nominal des HGR20, prévus pour de la machine industrielle en service continu.</p>
+<h3 class="doc-sous-titre">Châssis acier (pas aluminium)</h3>
+<p class="maj-desc">L'acier est environ 3 fois plus rigide que l'aluminium à section égale. Pour un routeur CNC de cette taille, c'est la rigidité du châssis qui détermine la qualité d'usinage en métaux (alu, acier doux). L'épaisseur recommandée par le wiki est 2.5 mm pour les tubes ; cet exemplaire utilise du 4 mm, encore plus massif, pour ménager une marge sur les vibrations en usinage acier.</p>
+<h3 class="doc-sous-titre">Pièces imprimées 3D non structurelles</h3>
+<p class="maj-desc">Malgré son nom, la PrintNC ne repose pas sur des pièces plastique en charge. Les éléments imprimés en 3D servent principalement de :</p>
+<ul class="doc-liste"><li>Gabarits de perçage temporaires (jetés ou réutilisés selon les pièces).</li><li>Supports de chemins de câbles, boîtiers de connectique.</li><li>Quelques platines secondaires (souvent remplacées par de l'aluminium usiné plus tard).</li></ul>
+<p class="maj-desc">L'idée initiale était de pouvoir construire une CNC sans avoir besoin d'une CNC, juste avec une imprimante 3D et des outils manuels de base.</p>
+<h3 class="doc-sous-titre">Tandem Y (deux moteurs pour l'axe Y)</h3>
+<p class="maj-desc">L'axe Y est entraîné par deux moteurs Nema 23 synchronisés, un de chaque côté du portique. Cette configuration en tandem évite tout problème de rattrapage mécanique (pas d'arbre de liaison ni d'engrenages), et garde le portique parfaitement parallèle. Les deux moteurs sont homés ensemble pour garantir l'orthogonalité au démarrage. Le scale négatif sur JOINT_3 compense simplement le sens de rotation inverse du moteur (les deux vis tournent dans le même sens mécanique).</p>
+<p class="maj-desc">---</p></div></details>
+<details class="doc-section"><summary class="doc-section-titre">Comparaison des options de broche</summary><div class="doc-section-corps"><p class="maj-desc">La PrintNC peut être équipée de différentes broches selon le budget et les usages prévus. Voici les options principales pour situer le choix retenu sur cet exemplaire.</p>
+<h3 class="doc-sous-titre">Vue d'ensemble</h3>
+<table class="doc-table"><tr><th>Type</th><th>Puissance typique</th><th>Refroidissement</th><th>Usage principal</th></tr><tr><td>Routeur (Makita RT0701C, DeWalt DWP611)</td><td>~700 W</td><td>Air (ventilateur interne)</td><td>Bois, occasionnel</td></tr><tr><td>Broche air-cooled</td><td>0.5 à 2.2 kW</td><td>Air (ventilateur intégré)</td><td>Polyvalent</td></tr><tr><td><strong>Broche water-cooled (choix retenu)</strong></td><td>1.5 à 2.2 kW</td><td>Eau (pompe externe)</td><td><strong>Travail intensif, silencieux</strong></td></tr></table>
+<h3 class="doc-sous-titre">Broches refroidies (air ou eau) — détails techniques</h3>
+<table class="doc-table"><tr><th>Puissance</th><th>Couple</th><th>Pince</th><th>Courant en 230V</th></tr><tr><td>0.5 kW</td><td>0.5 N·m</td><td>ER11</td><td>2.25 A</td></tr><tr><td>0.8 kW</td><td>0.3 N·m</td><td>ER11/16</td><td>3.6 A</td></tr><tr><td>1.5 kW</td><td>0.6 N·m</td><td>ER11/16</td><td>6.8 A</td></tr><tr><td><strong>2.2 kW (cet exemplaire)</strong></td><td><strong>0.875 N·m</strong></td><td><strong>ER20</strong></td><td><strong>10 A</strong></td></tr></table>
+<h3 class="doc-sous-titre">Tailles de pinces (collets)</h3>
+<p class="maj-desc">La taille de pince détermine le diamètre maximum de queue d'outil utilisable.</p>
+<table class="doc-table"><tr><th>Pince</th><th>Longueur</th><th>Diamètre</th></tr><tr><td>ER11</td><td>18 mm</td><td>11.5 mm</td></tr><tr><td>ER16</td><td>27.5 mm</td><td>17 mm</td></tr><tr><td><strong>ER20 (cet exemplaire)</strong></td><td><strong>31.5 mm</strong></td><td><strong>21 mm</strong></td></tr></table>
+<p class="maj-desc">L'ER20 accepte des outils jusqu'à 13 mm de queue, ce qui permet d'utiliser une large gamme de fraises industrielles. Pour l'usinage bois et alu sur cette machine, des queues de 6 mm, 8 mm et 12 mm sont les plus courantes.</p>
+<h3 class="doc-sous-titre">Pourquoi une broche water-cooled ER20 de 2.2 kW ?</h3>
+<p class="maj-desc">Le choix retenu (G-Penny 2.2 kW ER20) combine plusieurs avantages :</p>
+<ul class="doc-liste"><li><strong>Silencieuse</strong> : nettement plus discrète qu'une broche air-cooled ou qu'un routeur de défonçage, ce qui change la vie en atelier.</li><li><strong>Couple à basse vitesse</strong> : 0.875 N·m permet d'usiner correctement à 6000-12000 tr/min sans perdre toute la puissance (les routeurs perdent énormément de couple en dessous de leur régime nominal).</li><li><strong>Pilotage par VFD via RS485</strong> : la vitesse de broche se commande depuis LinuxCNC en G-code (M3 S12000), pas avec une molette manuelle. Contrôle précis et reproductible.</li><li><strong>Durée de vie</strong> : roulements et bobinages conçus pour un usage continu, pas pour des sessions courtes comme un défonçeur grand public.</li><li><strong>Précision</strong> : runout (faux-rond) très inférieur à un routeur défonçeur standard.</li></ul>
+<p class="maj-desc">Le wiki PrintNC déconseille fortement les broches Vevor car certains modèles utilisent des roulements inadaptés à un montage CNC. Les G-Penny "metal cutting" sont parmi les modèles recommandés par la communauté.</p>
+<p class="maj-desc">---</p></div></details>
 <details class="doc-section"><summary class="doc-section-titre">Câblage et électronique</summary><div class="doc-section-corps"><figure class="doc-photo"><img src="photos/dragchain.jpg" alt="Chemin de cables" loading="lazy"><figcaption>Chemin de cables</figcaption></figure>
 <figure class="doc-photo"><img src="photos/arriereboitierelectrique.jpg" alt="Arriere du boitier élèctrique" loading="lazy"><figcaption>Arriere du boitier élèctrique</figcaption></figure>
 <h3 class="doc-sous-titre">Carte Flexi-HAL</h3>
@@ -2594,6 +2644,11 @@ net spindle-on vfd.spindle-on =&gt; spindle.0.on</pre>
     <div class="footer-text">
       Atelier du Verdier &middot; PrintNC build log &middot; <a href="https://github.com/atelierduverdier" target="_blank" rel="noopener">GitHub</a>
     </div>
+    <div class="footer-counter">
+      <a href="https://atelierduverdier.goatcounter.com" target="_blank" rel="noopener" title="Statistiques de visite (GoatCounter)">
+        <img src="https://atelierduverdier.goatcounter.com/counter//.svg" alt="Compteur de visites" onerror="this.style.display='none'">
+      </a>
+    </div>
   </div>
 </footer>
 <script>
@@ -2723,7 +2778,7 @@ net spindle-on vfd.spindle-on =&gt; spindle.0.on</pre>
   const lbImg=document.getElementById('lightbox-img');
   const lbCap=document.getElementById('lightbox-caption');
   const lbClose=document.getElementById('lightbox-close');
-  document.querySelectorAll('.doc-photo img').forEach(img=>{
+  document.querySelectorAll('.doc-photo img, .hero-img').forEach(img=>{
     img.addEventListener('click',()=>{
       lbImg.src=img.src; lbImg.alt=img.alt;
       lbCap.textContent=img.alt;

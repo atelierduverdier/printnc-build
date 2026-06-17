@@ -220,6 +220,88 @@ Le pas plus fin en Z est un choix classique : il ralentit l'axe mais lui donne p
 ![Capteur LJ8A3-2-Z/AX](photos/capteur2.jpg)
 ![Alimentation 5V, Contacteur 24V/230V, Filtre anti-parasite](photos/contacteur.jpg)
 
+# Choix de conception
+
+Quelques décisions de conception du projet PrintNC qui peuvent surprendre au premier abord, mais qui sont issues de nombreuses itérations de la communauté.
+
+## Un seul patin par rail (et non deux)
+
+Les premières versions de la PrintNC utilisaient deux patins par rail. Le passage à un seul patin a été un choix réfléchi, validé par des centaines de machines construites :
+
+- **Pas de perte de performance** : les rails HGR20 sont surdimensionnés pour le poids du portique et les forces d'usinage d'un routeur DIY. La flexion ne vient pas des rails.
+- **Coût réduit** : 6 patins HGW20 au lieu de 12.
+- **Plus grande surface de travail** : chaque patin supplémentaire réduit la course utile du rail d'environ 80 mm (avec son graisseur).
+- **Construction simplifiée** : moins de trous percés/taraudés, moins de risques de blocage par défaut d'alignement.
+
+Sur le très long terme, deux patins augmenteraient la durée de vie des rails — mais l'usage en routeur hobbyiste reste très en deçà du régime nominal des HGR20, prévus pour de la machine industrielle en service continu.
+
+## Châssis acier (pas aluminium)
+
+L'acier est environ 3 fois plus rigide que l'aluminium à section égale. Pour un routeur CNC de cette taille, c'est la rigidité du châssis qui détermine la qualité d'usinage en métaux (alu, acier doux). L'épaisseur recommandée par le wiki est 2.5 mm pour les tubes ; cet exemplaire utilise du 4 mm, encore plus massif, pour ménager une marge sur les vibrations en usinage acier.
+
+## Pièces imprimées 3D non structurelles
+
+Malgré son nom, la PrintNC ne repose pas sur des pièces plastique en charge. Les éléments imprimés en 3D servent principalement de :
+
+- Gabarits de perçage temporaires (jetés ou réutilisés selon les pièces).
+- Supports de chemins de câbles, boîtiers de connectique.
+- Quelques platines secondaires (souvent remplacées par de l'aluminium usiné plus tard).
+
+L'idée initiale était de pouvoir construire une CNC sans avoir besoin d'une CNC, juste avec une imprimante 3D et des outils manuels de base.
+
+## Tandem Y (deux moteurs pour l'axe Y)
+
+L'axe Y est entraîné par deux moteurs Nema 23 synchronisés, un de chaque côté du portique. Cette configuration en tandem évite tout problème de rattrapage mécanique (pas d'arbre de liaison ni d'engrenages), et garde le portique parfaitement parallèle. Les deux moteurs sont homés ensemble pour garantir l'orthogonalité au démarrage. Le scale négatif sur JOINT_3 compense simplement le sens de rotation inverse du moteur (les deux vis tournent dans le même sens mécanique).
+
+---
+
+# Comparaison des options de broche
+
+La PrintNC peut être équipée de différentes broches selon le budget et les usages prévus. Voici les options principales pour situer le choix retenu sur cet exemplaire.
+
+## Vue d'ensemble
+
+| Type | Puissance typique | Refroidissement | Usage principal |
+| ---- | ----------------- | --------------- | --------------- |
+| Routeur (Makita RT0701C, DeWalt DWP611) | ~700 W | Air (ventilateur interne) | Bois, occasionnel |
+| Broche air-cooled | 0.5 à 2.2 kW | Air (ventilateur intégré) | Polyvalent |
+| **Broche water-cooled (choix retenu)** | 1.5 à 2.2 kW | Eau (pompe externe) | **Travail intensif, silencieux** |
+
+## Broches refroidies (air ou eau) — détails techniques
+
+| Puissance | Couple | Pince | Courant en 230V |
+| --------- | ------ | ----- | --------------- |
+| 0.5 kW | 0.5 N·m | ER11 | 2.25 A |
+| 0.8 kW | 0.3 N·m | ER11/16 | 3.6 A |
+| 1.5 kW | 0.6 N·m | ER11/16 | 6.8 A |
+| **2.2 kW (cet exemplaire)** | **0.875 N·m** | **ER20** | **10 A** |
+
+## Tailles de pinces (collets)
+
+La taille de pince détermine le diamètre maximum de queue d'outil utilisable.
+
+| Pince | Longueur | Diamètre |
+| ----- | -------- | -------- |
+| ER11 | 18 mm | 11.5 mm |
+| ER16 | 27.5 mm | 17 mm |
+| **ER20 (cet exemplaire)** | **31.5 mm** | **21 mm** |
+
+L'ER20 accepte des outils jusqu'à 13 mm de queue, ce qui permet d'utiliser une large gamme de fraises industrielles. Pour l'usinage bois et alu sur cette machine, des queues de 6 mm, 8 mm et 12 mm sont les plus courantes.
+
+## Pourquoi une broche water-cooled ER20 de 2.2 kW ?
+
+Le choix retenu (G-Penny 2.2 kW ER20) combine plusieurs avantages :
+
+- **Silencieuse** : nettement plus discrète qu'une broche air-cooled ou qu'un routeur de défonçage, ce qui change la vie en atelier.
+- **Couple à basse vitesse** : 0.875 N·m permet d'usiner correctement à 6000-12000 tr/min sans perdre toute la puissance (les routeurs perdent énormément de couple en dessous de leur régime nominal).
+- **Pilotage par VFD via RS485** : la vitesse de broche se commande depuis LinuxCNC en G-code (M3 S12000), pas avec une molette manuelle. Contrôle précis et reproductible.
+- **Durée de vie** : roulements et bobinages conçus pour un usage continu, pas pour des sessions courtes comme un défonçeur grand public.
+- **Précision** : runout (faux-rond) très inférieur à un routeur défonçeur standard.
+
+Le wiki PrintNC déconseille fortement les broches Vevor car certains modèles utilisent des roulements inadaptés à un montage CNC. Les G-Penny "metal cutting" sont parmi les modèles recommandés par la communauté.
+
+---
+
 # Câblage et électronique
 ![Chemin de cables](photos/dragchain.jpg)
 ![Arriere du boitier élèctrique](photos/arriereboitierelectrique.jpg)

@@ -392,6 +392,23 @@ MODELE = '''<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrintNC &mdash; Journal de construction | Atelier du Verdier</title>
+<meta name="description" content="Construction complète d'une fraiseuse CNC PrintNC : journal vidéo, documentation technique (BOM, câblage, LinuxCNC, VFD), récit et configuration open source.">
+<meta name="author" content="Atelier du Verdier">
+<meta name="keywords" content="PrintNC, CNC, LinuxCNC, FlexiHAL, fraiseuse, DIY, Atelier du Verdier, build log, QtDragon, VFD Huanyang">
+<!-- Open Graph / Facebook / Discord -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="PrintNC — Journal de construction | Atelier du Verdier">
+<meta property="og:description" content="Construction complète d'une fraiseuse CNC PrintNC : journal vidéo, documentation technique, récit et configuration open source.">
+<meta property="og:image" content="https://atelierduverdier.github.io/printnc-build/photos/printnc.jpg">
+<meta property="og:url" content="https://atelierduverdier.github.io/printnc-build/">
+<meta property="og:locale" content="fr_FR">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="PrintNC — Journal de construction">
+<meta name="twitter:description" content="Construction complète d'une fraiseuse CNC PrintNC, open source.">
+<meta name="twitter:image" content="https://atelierduverdier.github.io/printnc-build/photos/printnc.jpg">
+<!-- GoatCounter analytics (privacy-friendly, sans cookies) -->
+<script data-goatcounter="https://atelierduverdier.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <style>
   :root{--bg:#13110e;--surface:#1c1916;--text:#f0ebe2;--muted:#a89e8c;--faint:#6b6356;--orange:#e8821e;--line:#332d24;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -406,6 +423,8 @@ MODELE = '''<!DOCTYPE html>
   .stats{display:flex;gap:40px;margin-top:36px;flex-wrap:wrap;}
   .stat .n{font-size:32px;font-weight:700;}
   .stat .l{font-size:13px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;}
+  .stat-hero .n{color:var(--orange);}
+  .stat-hero .l{text-transform:none;letter-spacing:0;color:var(--muted);font-size:14px;font-style:italic;}
   .nav{position:sticky;top:0;background:rgba(19,17,14,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10;}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 6px;}
   .tabs-mois{display:flex;gap:6px;flex-wrap:wrap;padding:4px 20px 10px;border-top:1px solid var(--line);}
@@ -485,7 +504,8 @@ MODELE = '''<!DOCTYPE html>
   #accueil{display:none;padding:24px 0 50px;}
   #accueil.show{display:block;}
   .hero{display:flex;gap:28px;align-items:center;margin-bottom:44px;flex-wrap:wrap;}
-  .hero-img{width:340px;max-width:100%;border-radius:14px;border:1px solid var(--line);object-fit:cover;}
+  .hero-img{width:340px;max-width:100%;border-radius:14px;border:1px solid var(--line);object-fit:cover;cursor:zoom-in;transition:.2s;}
+  .hero-img:hover{border-color:var(--orange);opacity:.92;}
   .hero-text{flex:1;min-width:260px;}
   .hero-titre{font-size:30px;margin:0 0 12px;color:var(--text);font-weight:600;}
   .hero-sous{font-size:16px;color:var(--muted);line-height:1.6;margin:0 0 20px;}
@@ -495,6 +515,8 @@ MODELE = '''<!DOCTYPE html>
   .hero-btn.alt{background:transparent;border:1px solid var(--orange);color:var(--orange);}
   .accueil-h{font-size:20px;color:var(--orange);margin:40px 0 18px;font-weight:600;}
   .accueil-p{font-size:15px;color:var(--muted);line-height:1.6;margin:0 0 18px;}
+  .accueil-p a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
+  .accueil-p a:hover{opacity:.7;}
   .specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;}
   .spec{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;}
   .spec-val{font-size:18px;color:var(--text);font-weight:600;margin-bottom:4px;}
@@ -586,6 +608,9 @@ MODELE = '''<!DOCTYPE html>
   .social a{color:var(--faint);transition:.2s;display:flex;}
   .social a:hover{color:var(--orange);transform:translateY(-2px);}
   .footer-text{font-size:13px;}
+  .footer-counter{margin-top:14px;opacity:.6;transition:.2s;}
+  .footer-counter:hover{opacity:1;}
+  .footer-counter img{max-height:28px;}
 </style>
 </head>
 <body>
@@ -597,9 +622,7 @@ MODELE = '''<!DOCTYPE html>
     <h1>Journal de construction</h1>
     <p class="sub">L'histoire complète d'une fraiseuse CNC construite de zero, du premier montage à blanc jusqu'à la machine pleinement fonctionnelle.</p>
     <div class="stats">
-      <div class="stat"><div class="n">5</div><div class="l">mois de travail</div></div>
-      <div class="stat"><div class="n">1275&times;1275</div><div class="l">surface (mm)</div></div>
-      <div class="stat"><div class="n">8000</div><div class="l">mm/min</div></div>
+      <div class="stat stat-hero"><div class="n">5 mois</div><div class="l">de patience, d'essais et de copeaux — janvier à juin 2026</div></div>
     </div>
   </div>
 </header>
@@ -629,12 +652,15 @@ __ONGLETS__
 <main class="wrap">
   <section id="accueil">
     <div class="hero">
-      <img class="hero-img" src="photos/printnc.jpg" alt="PrintNC de l'Atelier du Verdier" onerror="this.style.display='none'">
+      <img class="hero-img" src="photos/printnc.jpg" alt="PrintNC — Atelier du Verdier" onerror="this.style.display='none'">
       <div class="hero-text">
         <h1 class="hero-titre">PrintNC — Atelier du Verdier</h1>
         <p class="hero-sous">Journal de construction d'une fraiseuse CNC PrintNC, de la première pièce au premier copeau. Documentation complète, ouverte et reproductible.</p>
       </div>
     </div>
+
+    <h2 class="accueil-h">À propos de la PrintNC</h2>
+    <p class="accueil-p">La PrintNC est une fraiseuse CNC DIY haute performance conçue autour d'un châssis acier rigide et de pièces imprimées en 3D pour faciliter l'assemblage. Lancée fin 2019 par la communauté <a href="https://wiki.printnc.info" target="_blank" rel="noopener">printnc.info</a>, elle compte aujourd'hui des centaines de machines construites dans le monde, sous licence ouverte CC BY 4.0. Pensée pour le bois et l'aluminium (et l'acier à l'occasion), elle vise une précision typique de 0.03 à 0.1 mm. Mon exemplaire est une adaptation de la V3 avec broche 2.2 kW, motorisation Nema 23 en boucle fermée et électronique pilotée par LinuxCNC.</p>
 
     <h2 class="accueil-h">Caractéristiques en un coup d'œil</h2>
     <div class="specs">
@@ -669,8 +695,12 @@ __ONGLETS__
     </div>
 
     <h2 class="accueil-h">Fichiers et ressources</h2>
-    <p class="accueil-p">Tout le projet est open source. Les dépôts GitHub contiennent la configuration LinuxCNC complète, les macros G-code, le code du site et l'outil de lecture du VFD :</p>
+    <p class="accueil-p">Tout le projet est open source. Les plans d'origine de la PrintNC viennent du wiki communautaire ; mes adaptations, configuration et outils sont sur GitHub :</p>
     <div class="ressources">
+      <a class="ressource" href="https://wiki.printnc.info" target="_blank" rel="noopener">
+        <div class="ressource-titre">wiki.printnc.info</div>
+        <div class="ressource-desc">Le wiki officiel du projet PrintNC : plans, BOM de référence, guides de montage et toute la communauté.</div>
+      </a>
       <a class="ressource" href="https://github.com/atelierduverdier/printnc-config" target="_blank" rel="noopener">
         <div class="ressource-titre">printnc-config</div>
         <div class="ressource-desc">Configuration LinuxCNC : fichiers HAL, INI, macros G-code (toolchange, palpage...).</div>
@@ -720,6 +750,11 @@ __DOC__
     </div>
     <div class="footer-text">
       Atelier du Verdier &middot; PrintNC build log &middot; <a href="https://github.com/atelierduverdier" target="_blank" rel="noopener">GitHub</a>
+    </div>
+    <div class="footer-counter">
+      <a href="https://atelierduverdier.goatcounter.com" target="_blank" rel="noopener" title="Statistiques de visite (GoatCounter)">
+        <img src="https://atelierduverdier.goatcounter.com/counter//.svg" alt="Compteur de visites" onerror="this.style.display='none'">
+      </a>
     </div>
   </div>
 </footer>
@@ -850,7 +885,7 @@ __DOC__
   const lbImg=document.getElementById('lightbox-img');
   const lbCap=document.getElementById('lightbox-caption');
   const lbClose=document.getElementById('lightbox-close');
-  document.querySelectorAll('.doc-photo img').forEach(img=>{
+  document.querySelectorAll('.doc-photo img, .hero-img').forEach(img=>{
     img.addEventListener('click',()=>{
       lbImg.src=img.src; lbImg.alt=img.alt;
       lbCap.textContent=img.alt;
