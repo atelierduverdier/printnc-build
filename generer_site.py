@@ -392,9 +392,9 @@ MODELE = '''<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PrintNC &mdash; Journal de construction | Atelier du Verdier</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
 <meta name="description" content="Construction complète d'une fraiseuse CNC PrintNC : journal vidéo, documentation technique (BOM, câblage, LinuxCNC, VFD), récit et configuration open source.">
 <meta name="author" content="Atelier du Verdier">
 <meta name="keywords" content="PrintNC, CNC, LinuxCNC, FlexiHAL, fraiseuse, DIY, Atelier du Verdier, build log, QtDragon, VFD Huanyang">
