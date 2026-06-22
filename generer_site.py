@@ -412,6 +412,21 @@ MODELE = '''<!DOCTYPE html>
 <meta name="twitter:image" content="https://atelierduverdier.github.io/printnc-build/photos/printnc.jpg">
 <!-- GoatCounter analytics (privacy-friendly, sans cookies) -->
 <script data-goatcounter="https://atelierduverdier.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<!-- Compteur de visites en texte (API JSON GoatCounter) -->
+<script>
+  window.addEventListener('load', function() {
+    var r = new XMLHttpRequest();
+    r.addEventListener('load', function() {
+      try {
+        var n = JSON.parse(this.responseText).count;
+        document.getElementById('compteur-visites').innerText = n;
+        document.getElementById('footer-counter').hidden = false;
+      } catch (e) { /* en cas d'erreur, le compteur reste masque */ }
+    });
+    r.open('GET', 'https://atelierduverdier.goatcounter.com/counter/TOTAL.json');
+    r.send();
+  });
+</script>
 <style>
   :root{--bg:#13110e;--surface:#1c1916;--text:#f0ebe2;--muted:#a89e8c;--faint:#6b6356;--orange:#e8821e;--line:#332d24;}
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -611,9 +626,11 @@ MODELE = '''<!DOCTYPE html>
   .social a{color:var(--faint);transition:.2s;display:flex;}
   .social a:hover{color:var(--orange);transform:translateY(-2px);}
   .footer-text{font-size:13px;}
-  .footer-counter{margin-top:14px;opacity:.6;transition:.2s;}
+  .footer-counter{margin-top:14px;opacity:.6;transition:.2s;font-size:13px;}
   .footer-counter:hover{opacity:1;}
-  .footer-counter img{max-height:28px;}
+  .footer-counter a{color:var(--faint);}
+  .footer-counter a:hover{color:var(--orange);}
+  .footer-counter #compteur-visites{color:var(--orange);font-weight:600;}
 </style>
 </head>
 <body>
@@ -754,9 +771,9 @@ __DOC__
     <div class="footer-text">
       Atelier du Verdier &middot; PrintNC build log &middot; <a href="https://github.com/atelierduverdier" target="_blank" rel="noopener">GitHub</a>
     </div>
-    <div class="footer-counter">
+    <div class="footer-counter" id="footer-counter" hidden>
       <a href="https://atelierduverdier.goatcounter.com" target="_blank" rel="noopener" title="Statistiques de visite (GoatCounter)">
-        <img src="https://atelierduverdier.goatcounter.com/counter//.svg" alt="Compteur de visites" onerror="this.style.display='none'">
+        <span id="compteur-visites">0</span> visites
       </a>
     </div>
   </div>
