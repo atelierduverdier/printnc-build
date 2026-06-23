@@ -15,17 +15,24 @@ Camview cam resolution = 1280,720
 Points clés appris :
 
 - Forcer une résolution 16:9 native (1280,720) au lieu de DEFAULT (OpenCV tombe sinon sur du 640x480 4:3). Modes natifs de la caméra listés avec `v4l2-ctl --list-formats-ext` : 2560x1440, 1920x1080, 1280x720 et 640x360 sont du 16:9.
+
 - La ligne `Camview cam api = V4L2` était absente au départ ; sans elle l'API par défaut (ANY) ignorait la demande de résolution.
+
 - Les échelles xscale/yscale sont en pourcentage. C'est le **xscale** (axe X) qu'il faut augmenter pour réétirer une image comprimée horizontalement, pas le yscale. Ajuster à l'œil sur une rondelle (~165).
+
 - Une échelle **négative** retourne l'image sur cet axe (utile pour un montage caméra à l'envers, ou pour une image en miroir par rapport au mouvement réel de la table).
+
 - Édition à faire **LinuxCNC fermé** : QtDragon réécrit qtdragon.pref à la fermeture et écrase toute modif faite à chaud.
 
 ## Scintillement (bandes noires) sous éclairage LED 230V
 Sous l'éclairage LED 230V/50Hz (papillotement à 100 Hz), des bandes noires défilantes apparaissent ; image nickel en lumière du jour. Pistes testées sur /dev/video0 :
 
 - `power_line_frequency` était déjà sur 1 (50 Hz) : ce n'était pas le coupable.
+
 - Exposition manuelle calée sur un multiple de 10 ms (100 Hz) : `auto_exposure=1` (Manual Mode, valeur contre-intuitive : 1=manuel, 3=auto) puis `exposure_time_absolute=100` (unités de 100 us, donc 100 = 10 ms). MAIS le firmware de la caméra **ignore l'exposition manuelle** (10 ou 100 donnent la même image) — piste abandonnée.
+
 - Constat important : QtDragon/OpenCV reprend la main sur la caméra à l'ouverture du flux et écrase les réglages v4l2 poussés à la main. Tout réglage v4l2 doit être réappliqué APRÈS l'ouverture du flux.
+
 - **Solution de fond retenue** : remplacer l'éclairage par une LED en courant continu (anneau USB 5V ou bandeau 12/24V sur l'alim continue de la machine), qui ne scintille pas du tout. À faire.
 
 ## Offset caméra / broche et touch off
@@ -55,7 +62,9 @@ La pompe à eau (sortie FLOOD / COOLANT, M8) et les ventilateurs (AUX2) sont dé
 
 Comportement :
 - M3 (broche ON) ou M8 : pompe + ventilateurs démarrent immédiatement.
+
 - M5 (broche OFF) ou M9 : pompe + ventilateurs restent actifs encore 30 s, puis s'arrêtent ensemble.
+
 - Bouton AUX2 et M64 P2 / M65 P2 : commande manuelle des ventilateurs (inchangé).
 
 Réalisation avec un composant timedelay (post-refroidissement) et deux or2 en cascade. Dans remora-flexi.hal :

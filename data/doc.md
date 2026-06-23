@@ -177,8 +177,11 @@ La PrintNC est un routeur CNC DIY haute performance base sur un châssis acier, 
 
 Caractéristiques principales :
 - Châssis en tubes acier rectangulaires 100 x 50 mm, épaisseur 4 mm (plus massif et rigide que les recommandations standard du wiki, pour limiter les vibrations).
+
 - Pilotage par carte Flexi-HAL (Expatria) sous firmware Remora, sur Raspberry Pi 5.
+
 - LinuxCNC 2.9.8, interface QtDragon HD.
+
 - 4 axes mécaniques : X, Y (en tandem, 2 moteurs Y1 et Y2), Z.
 
 ## Motorisation
@@ -186,8 +189,11 @@ Caractéristiques principales :
 ![Connectiques Nema23](photos/connectique_nema23.jpg)
 
 - 4 moteurs pas a pas Nema 23 en boucle fermée, couple 3.00 Nm (424.83 oz.in), encodeur magnétique 1000 PPR (4000 CPR). Référence 23HS40-5004-ME1K (OMC-StepperOnline).
+
 - 4 drivers CL57T v4.1, plage 0 a 8.0 A, alimentation 24 a 48 VDC. Réglage du courant et du micro-pas par DIP switches sur le driver.
+
 - Alimentations a découpage 350 W 48 V 7.3 A (LE-350-48). Le 48 V aide a conserver le couple a haute vitesse.
+
 - Câblage blinde AWG20, longueur 4.7 m (CE5-M5-20) pour la puissance et les encodeurs.
 
 La boucle fermee permet aux drivers de rattraper un éventuel décalage grâce a l'encodeur : la machine signale une erreur plutôt que de perdre des pas silencieusement.
@@ -197,7 +203,9 @@ La boucle fermee permet aux drivers de rattraper un éventuel décalage grâce a
 ![Boitier centralisateur pour les capteurs](photos/boitiercapteurs.jpg)
 ## Transmission
 - Axes X et Y : vis à billes SFU1610 (diamètre 16 mm, pas 10 mm par tour) sur rails de guidage linéaires HGR20.
+
 - Axe Z : vis a billes SFU1204 (diamètre 12 mm, pas 4 mm par tour). Le pas fin augmente le couple de maintien vertical et contre la gravite sur la broche.
+
 - Paliers : BK/BF aux extrémités des vis.
 
 Le pas plus fin en Z est un choix classique : il ralentit l'axe mais lui donne plus de poussée et de tenue, ce qui est souhaitable pour porter le poids de la broche.
@@ -207,15 +215,20 @@ Le pas plus fin en Z est un choix classique : il ralentit l'axe mais lui donne p
 ## Broche et refroidissement
 ![Broche 2.2kW, pince ER20, refroidie à eau](photos/broche.jpg)
 - Broche G-Penny 2.2 kW, pince ER20, refroidie par eau (corps 80 x 230 mm, 220 V), 4 roulements céramiques série 7, déviation max annoncée 0.01 mm.
+
 - Variateur de fréquence (VFD) HuangYang (HY) 2.2 kW 220 VAC, pilote en vitesse par LinuxCNC via liaison série RS485 (Modbus).
+
 - Refroidissement : pompe a eau 220 V 75 W (débit max 3200 L/H), circuit ferme rempli de liquide de refroidissement automobile (protège de l'oxydation interne et empêche la prolifération d'algues).
+
 - Vitesse broche : jusqu'à 24000 tr/min.
 
 ![VFD HY et drivers moteur](photos/vfd.jpg)
 
 ## Sécurité électrique
 - Contacteur ABB AF09-30-10-11 avec bobine 24 V pour la coupure générale de l'armoire.
+
 - Chaîne d'arrêt d'urgence câblée sur la carte.
+
 - Capteurs de fin de course de proximité inductifs, type NPN NC (normalement ferme), alimentes en 24 V.
 
 ![Capteur LJ8A3-2-Z/AX](photos/capteur2.jpg)
@@ -230,8 +243,11 @@ Quelques décisions de conception du projet PrintNC qui peuvent surprendre au pr
 Les premières versions de la PrintNC utilisaient deux patins par rail. Le passage à un seul patin a été un choix réfléchi, validé par des centaines de machines construites :
 
 - **Pas de perte de performance** : les rails HGR20 sont surdimensionnés pour le poids du portique et les forces d'usinage d'un routeur DIY. La flexion ne vient pas des rails.
+
 - **Coût réduit** : 6 patins HGW20 au lieu de 12.
+
 - **Plus grande surface de travail** : chaque patin supplémentaire réduit la course utile du rail d'environ 80 mm (avec son graisseur).
+
 - **Construction simplifiée** : moins de trous percés/taraudés, moins de risques de blocage par défaut d'alignement.
 
 Sur le très long terme, deux patins augmenteraient la durée de vie des rails — mais l'usage en routeur hobbyiste reste très en deçà du régime nominal des HGR20, prévus pour de la machine industrielle en service continu.
@@ -245,7 +261,9 @@ L'acier est environ 3 fois plus rigide que l'aluminium à section égale. Pour u
 Malgré son nom, la PrintNC ne repose pas sur des pièces plastique en charge. Les éléments imprimés en 3D servent principalement de :
 
 - Gabarits de perçage temporaires (jetés ou réutilisés selon les pièces).
+
 - Supports de chemins de câbles, boîtiers de connectique.
+
 - Quelques platines secondaires (souvent remplacées par de l'aluminium usiné plus tard).
 
 L'idée initiale était de pouvoir construire une CNC sans avoir besoin d'une CNC, juste avec une imprimante 3D et des outils manuels de base.
@@ -294,9 +312,13 @@ L'ER20 accepte des outils jusqu'à 13 mm de queue, ce qui permet d'utiliser une 
 Le choix retenu (G-Penny 2.2 kW ER20) combine plusieurs avantages :
 
 - **Silencieuse** : nettement plus discrète qu'une broche air-cooled ou qu'un routeur de défonçage, ce qui change la vie en atelier.
+
 - **Couple à basse vitesse** : 0.875 N·m permet d'usiner correctement à 6000-12000 tr/min sans perdre toute la puissance (les routeurs perdent énormément de couple en dessous de leur régime nominal).
+
 - **Pilotage par VFD via RS485** : la vitesse de broche se commande depuis LinuxCNC en G-code (M3 S12000), pas avec une molette manuelle. Contrôle précis et reproductible.
+
 - **Durée de vie** : roulements et bobinages conçus pour un usage continu, pas pour des sessions courtes comme un défonçeur grand public.
+
 - **Précision** : runout (faux-rond) très inférieur à un routeur défonçeur standard.
 
 Le wiki PrintNC déconseille fortement les broches Vevor car certains modèles utilisent des roulements inadaptés à un montage CNC. Les G-Penny "metal cutting" sont parmi les modèles recommandés par la communauté.
@@ -316,6 +338,7 @@ Carte d'interface conçue par Expatria, exécutant le firmware Remora. Elle comm
 
 ## Alimentations et tensions
 - 48 V : moteurs (via les drivers CL57T).
+
 - 24 V : logique, contacteur, rail des sorties auxiliaires (relais), capteurs de fin de course inductifs.
 
 **Point important — liaison des masses** : le GND (masse) des deux alimentations 48 V est relié ensemble par un fil, afin d'établir une référence commune pour les drivers CL57T. Sans cette liaison, les niveaux logiques des signaux de pas entre la carte FlexiHAL (alimentée en 24 V) et les drivers (alimentés en 48 V) peuvent être instables ou mal interprétés. Un seul fil entre les deux bornes GND suffit.
@@ -337,7 +360,9 @@ Quatre sorties AUX pilotent des relais 24 V. Chaque relais est commandable de DE
 
 Câblage retenu (modules relais en activé HIGH, jumper sur H) :
 - Borne + du bornier AUX vers DC+ du module.
+
 - Pont court DC+ vers IN sur le module (c'est ce pont qui commande le relais).
+
 - Borne - du bornier AUX vers DC- du module.
 
 Le rail AUX qui fournit le + est alimente par le jumper P17 positionne sur MAIN (= 24 V). Sans cette alimentation, la borne + sort 0 V et rien ne fonctionne. Ne jamais peupler P17 ET une alimentation externe en même temps. Limites : 1000 mA combines pour les 4 AUX, résistance de bobine des relais >= 150 Ohm.
@@ -347,7 +372,9 @@ Le rail AUX qui fournit le + est alimente par le jumper P17 positionne sur MAIN 
 ## Arrosage et brouillard
 Sorties dédiées du firmware (indépendantes des AUX) :
 - M8 : arrosage (COOLANT) ON
+
 - M7 : brouillard (MIST) ON
+
 - M9 : coupe les deux
 
 ## Palpeur d'outil
@@ -433,10 +460,15 @@ Le script est disponible librement sur GitHub : [github.com/atelierduverdier/hua
 ## Organisation des fichiers
 La configuration vit dans ~/linuxcnc/configs/flexi-hal/ et est versionnée sur GitHub : github.com/atelierduverdier/printnc-config. Fichiers principaux :
 - remora-flexi.ini : configuration générale (axes, vitesses, broche, palpeur).
+
 - remora-flexi.hal : chargement des composants et câblage logique (HAL principal).
+
 - custom_postgui.hal : câblage des éléments qui n'existent qu'après le chargement de l'interface (boutons).
+
 - postgui_call_list.hal : liste des fichiers postgui a charger.
+
 - qtvcp/screens/qtdragon_hd/ : copie locale de l'écran (fichier .ui + handler Python), pour personnaliser l'interface sans toucher l'ecran système.
+
 - subroutines/ : macros G-code (toolchange.ngc, reset_ref, set_mode_martyre, set_mode_piece, etc.).
 
 ## Cinematique
@@ -444,12 +476,16 @@ JOINTS = 4, KINEMATICS = trivkins coordinates=XYZY. L'axe Y est en tandem : deux
 
 ## Résolution (scale, pas/mm)
 - X (JOINT_0) : -160.0 (1600 pas/tour, vis pas 10 mm, signe négatif = sens inverse)
+
 - Y1 (JOINT_1) : 160.0
+
 - Y2 (JOINT_3) : -160.0 (négatif pour inverser le sens de rotation du moteur, afin que les deux patins Y avancent dans le même sens quand les vis tournent dans le même sens)
+
 - Z (JOINT_2) : 400.0 (1600 pas/tour, vis pas 4 mm)
 
 ## Vitesses
 - X et Y : 8000 mm/min (133.33 mm/s), STEPGEN_MAXVEL 160.
+
 - Z : 33.33 mm/s, STEPGEN_MAXVEL 100.
 La vitesse X/Y a été poussée a 10000 mm/min lors des essais (sans perte de pas, latence du Pi excellente) mais ramenée a 8000 pour le confort sonore et thermique : a haute vitesse les moteurs perdent du couple (rattrape par la boucle fermée) et chauffent. Facteur limitant théorique pour aller plus haut : la vitesse critique de fouettement des vis SFU1610 sur ~1.3 m.
 
@@ -458,7 +494,9 @@ STEPLEN = STEPSPACE = 2500 ns sur tous les axes. C'est la durée de l'impulsion 
 
 ## Limites de course logicielles
 - X : -50 a 1240 mm
+
 - Y : -2 a 1286 mm (position HOME a 1275)
+
 - Z : -185 a 5 mm (HOME de sécurité a 0)
 
 ## Homing (référencement)
@@ -484,9 +522,13 @@ Camera X = <offset mesuré>
 Camera Y = <offset mesuré>
 ```
 - **Résolution** : forcer un mode 16:9 natif (1280,720) et non DEFAULT, sinon OpenCV capture en 640x480 (4:3) et l'image est écrasée (cercle = ovale). Modes natifs listés avec `v4l2-ctl --list-formats-ext`.
+
 - **API** : V4L2 (sans cette ligne, l'API par défaut ANY ignore la demande de résolution).
+
 - **xscale / yscale** : correction d'aspect en pourcentage (plage 100-200). Augmenter le xscale pour réétirer une image comprimée horizontalement. Une valeur **négative** retourne l'image sur l'axe (montage caméra a l'envers, ou image en miroir du mouvement table).
+
 - **Offset caméra/broche** (Camera X / Camera Y) : distance entre l'axe optique et l'axe broche. Mesure : graver un point avec la broche (noter X/Y), amener le réticule caméra sur ce point (noter X/Y) ; offset = position caméra − position broche. Réglable aussi via l'onglet SETTINGS.
+
 - **Périphérique** : /dev/video0 (paquet v4l-utils pour v4l2-ctl). Les /dev/video19-37 sont l'électronique interne du Pi 5.
 
 Procédure de touch off : ouvrir CAMVIEW, amener le réticule sur le point d'origine voulu (molette = zoom, clic droit = rotation, cercle réglable pour centrer), puis bouton **REF CAMERA** (bloc OFFSETS). Vérifier la 1re fois sur une chute : `G0 X0 Y0` en MDI a vide, la broche doit tomber pile sur le point visé.
@@ -508,47 +550,67 @@ Procédure de touch off : ouvrir CAMVIEW, amener le réticule sur le point d'ori
 
 ## Commandes MDI predefinies (onglet MAIN)
 - Goto User Zero : monte le Z en sécurité puis va au zero pièce (G0 Z25 ; X0 Y0 ; Z0).
+
 - Goto Machn Zero : retourne a l'origine machine (G53).
+
 - Reset Ref : remet les variables #1000 et #1002 a zero avant un nouveau job.
+
 - Mode Martyre : sélectionne le mode Z zéro sur le martyre (#1001 = 0).
+
 - Mode Pièce : sélectionne le mode Z zéro sur la pièce (#1001 = 1).
 
 ## Changement d'outil
 Changement MANUEL avec palpage AUTOMATIQUE de la longueur d'outil. Déclenche par M6 (REMAP vers le script toolchange.ngc). Deux modes :
 - Mode martyre (#1001 = 0) : le Z se met a zero automatiquement sur le martyre.
+
 - Mode pièce (#1001 = 1) : le Z se met a zero sur le dessus de la pièce.
 Le premier outil de la session sert de référence (variables #1000 et #1002). Le palpage se fait au palpeur fixe (G53 X-50 Y60), avec un double passage (rapide puis lent) pour la précision.
 
 ## Boutons utiles de l'interface
 - Tool Sensor : lance la mesure de longueur d'outil au palpeur fixe.
+
 - Touch Plate : zero Z manuel sur la pièce a l'aide d'une plaque de touche conductrice.
+
 - Go to Sensor : amène la broche au-dessus du palpeur.
+
 - Ref Camera : pose le zéro pièce (G54) à partir de la position du réticule caméra, en appliquant l'offset Camera X/Y (touch off visuel). Ouvrir CAMVIEW et centrer le réticule sur le point d'origine avant de cliquer.
+
 - Aspirateur / Lumière / Pompe : commandent les relais AUX correspondants.
 
 ## Codes utiles
 - M3 S<vitesse> : broche en marche (sens horaire) a la vitesse donnée. M5 : arrêt broche.
+
 - M64 P0..P3 / M65 P0..P3 : activé / désactivé une sortie AUX par G-code.
+
 - M7 / M8 / M9 : brouillard / arrosage / arrêt des deux.
+
 - OPT STOP : arrêt optionnel sur M1. OPT BLOCK : saut des lignes commençant par /.
 
 # Maintenance
 
 ## Avant chaque utilisation
 - Vérifier qu'il n'y a pas de copeaux ou d'obstacle sur les rails et le palpeur.
+
 - Contrôler visuellement les chaînes de câbles et le circuit de refroidissement.
+
 - Faire le homing pour repartir d'une référence connue.
 
 ## Periodiquement
 - Graissage des vis a billes et des rails linéaires (voir section Lubrification pour les quantités et le type de graisse).
+
 - Vérifier le serrage des vis de structure, SANS toucher aux réglages d'équerrage une fois etablis.
+
 - Contrôler le niveau et l'état du liquide de refroidissement de la broche.
+
 - Nettoyer le palpeur fixe (copeaux, poussière) pour garder des mesures fiables.
+
 - Vérifier la température des moteurs et des drivers après un usinage intensif.
 
 ## Après un usinage long ou intensif
 - Laisser refroidir broche et moteurs.
+
 - Dépoussiérer l'armoire électrique et vérifier la ventilation.
+
 - Inspecter l'usure des outils et de la pince ER20.
 
 ## Réglé d'or de l'équerrage
@@ -561,7 +623,9 @@ Vis a billes et rails linéaires (copies de HIWIN) : graisse blanche au lithium 
 
 ## Quantites par relubrification
 - Rails linéaires : 0.5 cm3 par patin.
+
 - Vis a billes SFU1204 (axe Z) : 0.2 cm3.
+
 - Vis a billes SFU1610 (axes X/Y) : environ 0.8 cm3 (valeur donnée pour 1604, très proche).
 En général, un coup de pompe par roulement suffit.
 
@@ -654,44 +718,73 @@ La précision typique d'une PrintNC se situe entre 0.03 et 0.1 mm. Elle dépend 
 ## LinuxCNC et HAL
 
 - **HAL** (Hardware Abstraction Layer) : couche logicielle qui connecte les composants logiciels entre eux et avec le matériel. On y définit les connexions via des fichiers `.hal`.
+
 - **REMAP** : mécanisme LinuxCNC permettant de remplacer un code G ou M standard par un script personnalisé. Exemple : `REMAP=M6` redirige le changement d'outil vers `toolchange.ngc`.
+
 - **MDI** (Manual Data Input) : mode de saisie manuelle de commandes G-code, ligne par ligne, sans charger de programme.
+
 - **Feed Hold** : mise en pause de l'avance (pas de la broche). Le programme peut reprendre exactement où il s'est arrêté.
+
 - **Homing** : procédure de référencement — la machine se déplace vers ses capteurs de fin de course pour établir une position d'origine connue.
+
 - **G53** : coordonnées machine absolues (indépendantes du zéro pièce). Utilisées pour les positions fixes comme le palpeur ou l'ATC.
+
 - **G54** : premier système de coordonnées pièce (Work Coordinate System). C'est le zéro pièce que tu définis avec le touch off.
+
 - **Touch off** : opération qui définit le zéro pièce (G54) à la position actuelle de la machine.
+
 - **QtDragon HD** : interface graphique (écran de contrôle) de LinuxCNC utilisée sur cette machine. Basée sur Qt/PyQt5.
+
 - **postgui HAL** : fichier HAL chargé après l'interface graphique, nécessaire pour connecter les boutons de l'interface aux signaux HAL.
 
 ## Mécanique
 
 - **SFU** : désignation des vis à billes à écrou simple (Single Fixed Unit). Ex : SFU1610 = 16 mm de diamètre, 10 mm de pas.
+
 - **HGR20** : rail de guidage linéaire de 20 mm de largeur, avec patins HGH ou HGW.
+
 - **BK / BF** : supports de palier pour vis à billes. BK = côté motorisé (fixe), BF = côté libre (flottant).
+
 - **Tandem Y** : configuration avec deux moteurs pilotant le même axe Y en parallèle, pour entraîner les deux côtés du portique simultanément.
+
 - **Martyre** : planche sacrificielle posée sur le plateau de la machine, sur laquelle on fixe les pièces à usiner. Elle absorbe les passes trop profondes.
+
 - **Tramming** : opération de mise à l'équerre de la broche par rapport au plateau — vérification que la broche est bien perpendiculaire à la surface d'usinage.
 
 ## Électronique
 
 - **FlexiHAL** : carte d'interface CNC conçue par Expatria, exécutant le firmware Remora. Elle communique avec le Raspberry Pi via SPI.
+
 - **Remora** : firmware open source pour microcontrôleur qui transforme une carte comme la FlexiHAL en interface temps réel pour LinuxCNC.
+
 - **CL57T** : driver de moteur pas à pas en boucle fermée. Reçoit les impulsions de pas de la carte et corrige la position grâce à l'encodeur du moteur.
+
 - **NPN NC** : type de capteur inductif. NPN = transistor NPN (sortie vers la masse), NC = Normalement Fermé (le circuit est fermé au repos, s'ouvre à la détection).
+
 - **VFD** (Variable Frequency Drive) : variateur de fréquence, aussi appelé variateur de vitesse. Contrôle la vitesse de rotation de la broche en faisant varier la fréquence du courant alternatif.
+
 - **RS485** : protocole de communication série différentiel, utilisé ici pour contrôler le VFD depuis LinuxCNC (protocole Modbus RTU).
+
 - **or2** : composant HAL qui réalise un OU logique à deux entrées. Utilisé pour combiner deux sources de commande (bouton ET G-code) sur une même sortie.
+
 - **AUX** : sorties auxiliaires de la FlexiHAL (AUX0 à AUX3), utilisées pour piloter des relais (aspirateur, lumière, pompe...).
+
 - **camview** : widget de qtvcp (basé sur OpenCV) affichant le flux d'une caméra USB dans QtDragon, avec réticule, cercle et lecture d'angle réglables. Utilisé ici pour le touch off X/Y visuel.
+
 - **C-mount** : standard de monture d'objectif (filetage 1 pouce, tirage 17.5 mm) des caméras industrielles. L'objectif varifocal 5-50 mm de la caméra de positionnement est en monture C.
 
 ## G-code
 
 - **M6** : code de changement d'outil. Sur cette machine, redirigé par REMAP vers `toolchange.ngc` qui gère le palpage automatique.
+
 - **M64 / M65** : active / désactive une sortie numérique (digital output). Ex : `M64 P0` active AUX0.
+
 - **M7 / M8 / M9** : brouillard / arrosage / arrêt des deux.
+
 - **G38.2** : cycle de palpage — déplace l'outil jusqu'au contact d'une surface et enregistre la position. Déclenche une erreur si pas de contact.
+
 - **G43 Hx** : active la compensation de longueur d'outil numéro x. Sur cette machine, géré automatiquement par `toolchange.ngc` après palpage.
+
 - **G90 / G91** : mode de coordonnées absolues / relatives (incrémentales).
+
 - **G64 P0.03** : mode de suivi de trajectoire avec tolérance de 0.03 mm. Lisse les angles pour maintenir la vitesse d'avance.
