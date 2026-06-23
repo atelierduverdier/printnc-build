@@ -1,3 +1,37 @@
+# 23 juin 2026 — Caméra de positionnement (vue CAMVIEW QtDragon)
+
+## Caméra installée et fonctionnelle
+Caméra USB "2k usb Camera Redeagle" (capteur HD 16:9) avec objectif C-mount varifocal 5-50 mm, utilisée pour le positionnement (touch off X/Y à la caméra). Vue intégrée dans l'onglet CAMVIEW de QtDragon (widget camview de qtvcp, basé sur OpenCV). Périphérique : /dev/video0 (vérifié avec `v4l2-ctl --list-devices` ; les /dev/video19-37 sont l'électronique interne du Pi 5, à ignorer). Outil v4l2-ctl installé via le paquet `v4l-utils`.
+
+## Image ovale (rapport d'aspect) : corrigé par les échelles
+L'image arrivait déformée (cercle = ovale vertical, aplati sur les côtés) : le capteur 16:9 était affiché dans un cadre carré. Réglages dans qtdragon.pref, section [CUSTOM_FORM_ENTRIES] :
+```ini
+Camview xscale = 165
+Camview yscale = 100
+Camview cam number = 0
+Camview cam api = V4L2
+Camview cam resolution = 1280,720
+```
+Points clés appris :
+- Forcer une résolution 16:9 native (1280,720) au lieu de DEFAULT (OpenCV tombe sinon sur du 640x480 4:3). Modes natifs de la caméra listés avec `v4l2-ctl --list-formats-ext` : 2560x1440, 1920x1080, 1280x720 et 640x360 sont du 16:9.
+- La ligne `Camview cam api = V4L2` était absente au départ ; sans elle l'API par défaut (ANY) ignorait la demande de résolution.
+- Les échelles xscale/yscale sont en pourcentage. C'est le **xscale** (axe X) qu'il faut augmenter pour réétirer une image comprimée horizontalement, pas le yscale. Ajuster à l'œil sur une rondelle (~165).
+- Une échelle **négative** retourne l'image sur cet axe (utile pour un montage caméra à l'envers, ou pour une image en miroir par rapport au mouvement réel de la table).
+- Édition à faire **LinuxCNC fermé** : QtDragon réécrit qtdragon.pref à la fermeture et écrase toute modif faite à chaud.
+
+## Scintillement (bandes noires) sous éclairage LED 230V
+Sous l'éclairage LED 230V/50Hz (papillotement à 100 Hz), des bandes noires défilantes apparaissent ; image nickel en lumière du jour. Pistes testées sur /dev/video0 :
+- `power_line_frequency` était déjà sur 1 (50 Hz) : ce n'était pas le coupable.
+- Exposition manuelle calée sur un multiple de 10 ms (100 Hz) : `auto_exposure=1` (Manual Mode, valeur contre-intuitive : 1=manuel, 3=auto) puis `exposure_time_absolute=100` (unités de 100 us, donc 100 = 10 ms). MAIS le firmware de la caméra **ignore l'exposition manuelle** (10 ou 100 donnent la même image) — piste abandonnée.
+- Constat important : QtDragon/OpenCV reprend la main sur la caméra à l'ouverture du flux et écrase les réglages v4l2 poussés à la main. Tout réglage v4l2 doit être réappliqué APRÈS l'ouverture du flux.
+- **Solution de fond retenue** : remplacer l'éclairage par une LED en courant continu (anneau USB 5V ou bandeau 12/24V sur l'alim continue de la machine), qui ne scintille pas du tout. À faire.
+
+## Offset caméra / broche et touch off
+L'offset entre l'axe de la caméra et l'axe de la broche se règle via les champs `Camera X` / `Camera Y` (onglet SETTINGS, ou section [CUSTOM_FORM_ENTRIES] de qtdragon.pref, LinuxCNC fermé). Mesure : graver un point avec la broche (noter X/Y machine), amener le réticule caméra sur ce même point (noter X/Y), l'offset = position caméra − position broche. Utilisation : amener le réticule sur le point d'origine voulu, puis bouton **REF CAMERA** (bloc OFFSETS, sous TOUCH PLATE) — QtDragon pose le G54 à l'aplomb de la broche en tenant compte de l'offset. Vérification de sécurité : après REF CAMERA, `G0 X0 Y0` en MDI à vide ; la broche doit tomber pile sur le point visé. Si décalé du déport → signe de l'offset à inverser. Le cercle et le réticule réglables (molette = zoom, clic droit = rotation) aident à centrer précisément.
+
+## Support caméra déporté (à fabriquer)
+Support pour fixer la caméra sur la face verticale droite du porte-broche (face 18x80 mm, 2 vis M6 entraxe 45 mm, vis à rallonger) avec un déport de ~12 mm vers la droite. Plaque ~48x73x12 mm : 2 trous M6 lamés côté face, poche de centrage 20x20 mm pour le pied de la caméra + trou central. Conçu via une macro FreeCAD paramétrique (support_camera.FCMacro). À imprimer en proto PLA/PETG puis usiner en alu (rigidité = stabilité de l'offset). Attention orientation : pour tourner la caméra de 180°, faire pivoter le corps caméra par rapport à son pied (la poche de centrage bloque le pied en rotation).
+
 # 16 juin 2026 — VFD HuangYang en HYComm et refroidissement broche
 
 ## Lecture des paramètres du VFD via le protocole HYComm

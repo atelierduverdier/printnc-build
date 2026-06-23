@@ -105,6 +105,7 @@ Liste complète du matériel pour la construction de la PrintNC, avec les prix p
 | [Ventilateurs](https://www.aliexpress.com/item/1005003071813339.html?spm=a2g0o.order_list.order_list_main.117.4ce11802hMwK90) | 1 |  | 30.03€ | 30.03 € |
 | [Ventilateurs 2x 24v](https://www.aliexpress.com/item/1005003071813339.html?spm=a2g0o.order_list.order_list_main.117.4ce11802hMwK90) | 1 |  | 20.05€ | 20.05 € |
 | [Bouton ON/OFF](https://www.amazon.fr/dp/B09Y23XLX8?ref=ppx_yo2ov_dt_b_fed_asin_title) | 1 |  | 15.99€ | 15.99 € |
+| Caméra USB 2k Redeagle + objectif C-mount 5-50 mm | 1 | Positionnement (vue CAMVIEW) | — | — |
 | **Sous-total** | | | | **118.98 €** |
 
 ## Électronique — Capteurs
@@ -469,6 +470,27 @@ Un PC x86_64 sous Debian sert au développement de l'interface en simulation, sy
 ## Sauvegarde et synchronisation (git)
 **Règle d'or git** : `git pull` en arrivant sur une machine, `push` en partant. Un script push-config (range hors dépôt) demande un message puis fait add + commit + push. L'authentification GitHub se fait par token personnel (le mot de passe n'est plus accepte). Un .gitignore exclut les fichiers propres a chaque machine (linuxcnc.var, qtdragon.pref, fichiers temporaires).
 
+## Caméra de positionnement (CAMVIEW)
+Caméra USB 2k Redeagle (capteur HD 16:9) + objectif C-mount varifocal 5-50 mm, affichée dans l'onglet CAMVIEW de QtDragon (widget camview de qtvcp, OpenCV). Sert au touch off X/Y visuel : on positionne le réticule sur un point de la pièce, le bouton REF CAMERA pose le zéro à l'aplomb de la broche.
+
+Réglages dans qtdragon.pref, section [CUSTOM_FORM_ENTRIES] (éditer **LinuxCNC fermé**, sinon QtDragon réécrit le fichier a la fermeture) :
+```ini
+Camview xscale = 165
+Camview yscale = 100
+Camview cam number = 0
+Camview cam api = V4L2
+Camview cam resolution = 1280,720
+Camera X = <offset mesuré>
+Camera Y = <offset mesuré>
+```
+- **Résolution** : forcer un mode 16:9 natif (1280,720) et non DEFAULT, sinon OpenCV capture en 640x480 (4:3) et l'image est écrasée (cercle = ovale). Modes natifs listés avec `v4l2-ctl --list-formats-ext`.
+- **API** : V4L2 (sans cette ligne, l'API par défaut ANY ignore la demande de résolution).
+- **xscale / yscale** : correction d'aspect en pourcentage (plage 100-200). Augmenter le xscale pour réétirer une image comprimée horizontalement. Une valeur **négative** retourne l'image sur l'axe (montage caméra a l'envers, ou image en miroir du mouvement table).
+- **Offset caméra/broche** (Camera X / Camera Y) : distance entre l'axe optique et l'axe broche. Mesure : graver un point avec la broche (noter X/Y), amener le réticule caméra sur ce point (noter X/Y) ; offset = position caméra − position broche. Réglable aussi via l'onglet SETTINGS.
+- **Périphérique** : /dev/video0 (paquet v4l-utils pour v4l2-ctl). Les /dev/video19-37 sont l'électronique interne du Pi 5.
+
+Procédure de touch off : ouvrir CAMVIEW, amener le réticule sur le point d'origine voulu (molette = zoom, clic droit = rotation, cercle réglable pour centrer), puis bouton **REF CAMERA** (bloc OFFSETS). Vérifier la 1re fois sur une chute : `G0 X0 Y0` en MDI a vide, la broche doit tomber pile sur le point visé.
+
 # Utilisation
 
 ## Procédure de démarrage
@@ -501,6 +523,7 @@ Le premier outil de la session sert de référence (variables #1000 et #1002). L
 - Tool Sensor : lance la mesure de longueur d'outil au palpeur fixe.
 - Touch Plate : zero Z manuel sur la pièce a l'aide d'une plaque de touche conductrice.
 - Go to Sensor : amène la broche au-dessus du palpeur.
+- Ref Camera : pose le zéro pièce (G54) à partir de la position du réticule caméra, en appliquant l'offset Camera X/Y (touch off visuel). Ouvrir CAMVIEW et centrer le réticule sur le point d'origine avant de cliquer.
 - Aspirateur / Lumière / Pompe : commandent les relais AUX correspondants.
 
 ## Codes utiles
@@ -613,6 +636,15 @@ Symptome de la limite physique du couple a haute vitesse (rattrapee par la boucl
 ## Perte de pas
 Avec des moteurs en boucle fermee, une vraie perte de pas est rare (le driver corrige). En cas de décalage : vérifier l'accouplement vis/moteur, les timings STEPLEN/STEPSPACE, et que la vitesse/accélération ne depasse pas les capacites mecaniques.
 
+## Image caméra ovale / déformée (cercle = ovale)
+Le capteur 16:9 est affiché dans un cadre carré, ou la capture est en 4:3. Forcer un mode 16:9 natif : `Camview cam resolution = 1280,720` et ajouter `Camview cam api = V4L2` (sans elle, ANY ignore la résolution). Affiner avec `Camview xscale` (augmenter pour réétirer l'horizontale) en regardant une rondelle. Éditer qtdragon.pref **LinuxCNC fermé** (réécrit a la fermeture sinon). Image a l'envers : mettre xscale et/ou yscale en négatif.
+
+## Bandes noires défilantes sur l'image caméra
+Scintillement de l'éclairage LED 230V/50Hz (papillote a 100 Hz) non synchronisé avec la caméra. Le firmware de la caméra Redeagle ignore l'exposition manuelle (réglage v4l2 sans effet), et QtDragon/OpenCV écrase de toute façon les réglages v4l2 a l'ouverture du flux. Solution de fond : éclairer en **courant continu** (LED USB 5V ou bandeau 12/24V sur l'alim continue), qui ne scintille pas.
+
+## Touch off caméra décalé (REF CAMERA)
+Si après REF CAMERA un `G0 X0 Y0` ne tombe pas sur le point visé : décalage d'environ le déport = offset Camera X/Y non appliqué ou de signe inversé (essayer l'opposé). Décalage dans une direction franchement fausse = orientation d'image incohérente avec le mouvement table : retourner l'image avec un xscale/yscale négatif, ou réorienter la caméra physiquement.
+
 # Précision attendue (PrintNC)
 
 La précision typique d'une PrintNC se situe entre 0.03 et 0.1 mm. Elle dépend du matériau usiné, de la qualité de l'équerrage et de l'alignement, et du temps investi sur chaque pièce. C'est une machine de type routeur a portique, orientée bois et aluminium (et acier a l'occasion), idéale pour des profils plats de grande surface (environ 110 mm de dégagement en Z). Pour des petites pièces a très haute précision, une autre architecture serait plus adaptée.
@@ -651,6 +683,8 @@ La précision typique d'une PrintNC se situe entre 0.03 et 0.1 mm. Elle dépend 
 - **RS485** : protocole de communication série différentiel, utilisé ici pour contrôler le VFD depuis LinuxCNC (protocole Modbus RTU).
 - **or2** : composant HAL qui réalise un OU logique à deux entrées. Utilisé pour combiner deux sources de commande (bouton ET G-code) sur une même sortie.
 - **AUX** : sorties auxiliaires de la FlexiHAL (AUX0 à AUX3), utilisées pour piloter des relais (aspirateur, lumière, pompe...).
+- **camview** : widget de qtvcp (basé sur OpenCV) affichant le flux d'une caméra USB dans QtDragon, avec réticule, cercle et lecture d'angle réglables. Utilisé ici pour le touch off X/Y visuel.
+- **C-mount** : standard de monture d'objectif (filetage 1 pouce, tirage 17.5 mm) des caméras industrielles. L'objectif varifocal 5-50 mm de la caméra de positionnement est en monture C.
 
 ## G-code
 
