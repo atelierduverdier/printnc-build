@@ -688,6 +688,9 @@ La carte lit ses entrées en logique activé basse. Utiliser flexi.input.FEED_HO
 ## Bouton GO HOME : erreur a haute vitesse
 Le calcul du delai d'attente (calc_mdi_move_wait_time dans le handler) ignore le temps d'accélération/décélération. A haute vitesse, le WAIT expire avant la fin du mouvement. Solution : augmenter wait_buffer_secs (de 1 a 4) dans le handler.
 
+## Bouton QtDragon qui déclenche deux actions / mouvement parasite
+Si un bouton fait deux choses à la fois (ex. le bon déplacement ET un retour parasite vers l'origine), alors que la méthode du handler est correcte : le bouton a probablement été créé en réutilisant un bouton existant dans Qt Designer, qui conserve son ancienne connexion signal/slot dans le .ui. Cette connexion s'ajoute à celle faite côté Python (`.clicked.connect(...)`), et les deux partent à chaque clic. Diagnostic : `grep "nom_du_bouton" fichier.ui` — il ne doit rester que la ligne `<widget class="QPushButton" name="...">`, aucune ligne `<sender>`. Correction : supprimer le bloc `<connection>...</connection>` du bouton dans le .ui (F4 dans Designer → Edit Signals/Slots, ou suppression directe du bloc), ou laisser le bouton non connecté dans le .ui et tout gérer côté Python. Indice clé : si la commande fonctionne en MDI manuel mais pas depuis le bouton, le problème n'est pas dans le G-code ni le handler, mais dans une connexion .ui cachée.
+
 ## Erreurs page_allocator et gel au démarrage
 Le widget web QtWebEngine de QtDragon (page HTML de l'onglet SETUP, non utilisee) plante au démarrage. Le supprimer dans Designer (garder PDF et PROPERTIES) et proteger son initialisation dans le handler avec hasattr.
 
@@ -708,6 +711,9 @@ Scintillement de l'éclairage LED 230V/50Hz (papillote a 100 Hz) non synchronis�
 
 ## Touch off caméra décalé (REF CAMERA)
 Si après REF CAMERA un `G0 X0 Y0` ne tombe pas sur le point visé : décalage d'environ le déport = offset Camera X/Y non appliqué ou de signe inversé (essayer l'opposé). Décalage dans une direction franchement fausse = orientation d'image incohérente avec le mouvement table : retourner l'image avec un xscale/yscale négatif, ou réorienter la caméra physiquement.
+
+## Bouton CAM VERS OUTIL (amener la caméra à la place de la fraise)
+Pour pointer un repère à l'écran sans déplacer le zéro : un bouton custom envoie un déplacement RELATIF de l'offset caméra/broche (`G91 G0 X[-cam_x] Y[-cam_y]` puis `G90`), depuis la position courante quelle qu'elle soit. La caméra vient alors au-dessus du point que visait la fraise. Workflow complet : poser la fraise sur le point → clic CAM VERS OUTIL → ajuster finement au jog en regardant l'image → REF CAMERA pour poser le zéro pièce. Le bouton et REF CAMERA doivent lire les MÊMES champs Camera X / Camera Y, sinon le zéro est décalé de l'écart entre les deux. Le déplacement étant relatif (G91), inutile de passer par X0 Y0 d'abord. Si le sens du décalage est inversé (la caméra part du mauvais côté), retirer les signes négatifs dans la commande.
 
 # Précision attendue (PrintNC)
 

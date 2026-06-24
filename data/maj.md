@@ -1,3 +1,24 @@
+# 24 juin 2026 — Bouton CAM VERS OUTIL (décalage caméra/broche)
+
+## Bouton de décalage caméra ajouté
+Bouton "CAM VERS OUTIL" qui amène la caméra à la place de la fraise par un déplacement relatif de l'offset caméra/broche, depuis n'importe quelle position. Workflow : poser la fraise sur le point visé → clic (la caméra vient au-dessus du point) → ajustement fin au jog en regardant l'image → REF CAMERA pour poser le zéro pièce. Le bouton et REF CAMERA lisent les mêmes champs (lineEdit_camera_x / camera_y), donc le décalage et la compensation sont cohérents par construction. Plus besoin de passer par X0 Y0 comme avant. La méthode du handler envoie simplement `G91 G0 X[-cam_x] Y[-cam_y]` puis `G90`, via deux CALL_MDI_WAIT.
+
+## Bug : la fraise traversait la table au lieu du petit saut (RÉSOLU)
+Symptôme déroutant : en MDI manuel, `G91 G0 X-76 Y-85` allait direct en 2 s ; lancé depuis le bouton, la fraise traversait toute la table vers l'origine. Le handler Python était pourtant correct (le status bar affichait bien la bonne commande).
+
+Cause racine : le bouton avait été créé dans Qt Designer en RÉUTILISANT un bouton existant, qui gardait sa connexion d'origine dans le .ui vers le slot `btn_goto_location_clicked()` (lequel fait un `G53 G0 Z0` puis `G53 G0 X.. Y..` en coordonnées MACHINE). À chaque clic, DEUX actions partaient en parallèle : la connexion Python ajoutée à la main (bon déplacement relatif) ET la connexion parasite du .ui (G53 absolu machine → traversée vers l'origine). En MDI manuel ce parasite n'existe pas, d'où la différence.
+
+Diagnostic par grep sur le .ui :
+```
+<sender>btn_camera_to_tool</sender>
+<signal>clicked()</signal>
+<slot>btn_goto_location_clicked()</slot>
+```
+
+Correction : suppression du bloc `<connection>` parasite dans le .ui. Le bouton ne garde que la connexion Python définie dans `initialized__` (`self.w.btn_camera_to_tool.clicked.connect(self.btn_camera_to_tool_clicked)`). Vérification : `grep btn_camera_to_tool` sur le .ui ne doit laisser que la définition du widget, plus aucune ligne `<sender>`.
+
+Leçon : réutiliser un bouton dans Designer conserve ses connexions signal/slot du .ui, invisibles côté handler. Toujours vérifier (F4 dans Designer, ou grep sur le .ui) et supprimer l'ancienne connexion avant d'en câbler une nouvelle — ou tout gérer côté Python en laissant le bouton non connecté dans le .ui. Quand un widget réagit "en double" alors que le code semble correct, le diagnostic est dans le .ui, pas dans le handler. Le sous-programme externe cam_to_tool.ngc, d'abord envisagé, est abandonné : tout passe par le handler.
+
 # 23 juin 2026 — Caméra de positionnement (vue CAMVIEW QtDragon)
 
 ## Caméra installée et fonctionnelle
