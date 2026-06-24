@@ -19,6 +19,9 @@ Correction : suppression du bloc `<connection>` parasite dans le .ui. Le bouton 
 
 Leçon : réutiliser un bouton dans Designer conserve ses connexions signal/slot du .ui, invisibles côté handler. Toujours vérifier (F4 dans Designer, ou grep sur le .ui) et supprimer l'ancienne connexion avant d'en câbler une nouvelle — ou tout gérer côté Python en laissant le bouton non connecté dans le .ui. Quand un widget réagit "en double" alors que le code semble correct, le diagnostic est dans le .ui, pas dans le handler. Le sous-programme externe cam_to_tool.ngc, d'abord envisagé, est abandonné : tout passe par le handler.
 
+## Bouton "Afficher le bureau"
+Ajout d'un bouton (objectName btn_bureau) qui masque toutes les fenêtres pour accéder au bureau, via `wmctrl -k on` lancé en subprocess.Popen depuis la méthode show_desktop du handler. Dépendance : paquet wmctrl (`sudo apt install wmctrl`) ; si absent, le handler logue un avertissement sans planter. Spécifique XFCE/X11. Connexion défensive dans initialized__ (hasattr) comme les autres boutons lanceurs (terminal, geany, navigateur, fichiers).
+
 # 23 juin 2026 — Caméra de positionnement (vue CAMVIEW QtDragon)
 
 ## Caméra installée et fonctionnelle
