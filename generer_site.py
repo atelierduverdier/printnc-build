@@ -992,7 +992,8 @@ __DOC__
       tally[n]++; lock(n); render();
       // localStorage.setItem('adv-rate-vote', n);
       if(window.goatcounter && window.goatcounter.count){
-        window.goatcounter.count({ path:'note-'+n, title:'Note '+n+'/5', event:true });
+        // Page vue (et non event) sur un chemin dedie : lisible via /counter/...json
+        window.goatcounter.count({ path:'/note/'+n, title:'Note '+n+'/5' });
       }
     }
     stars.forEach(function(star){
@@ -1005,7 +1006,7 @@ __DOC__
       if(DEMO){ tally={1:1,2:0,3:2,4:7,5:11}; render(); repaint(); return; }
       var done=0;
       for(var n=1;n<=5;n++){ (function(n){
-        fetch(GC+'/counter/note-'+n+'.json')
+        fetch(GC+'/counter/'+encodeURIComponent('/note/'+n)+'.json')
           .then(function(r){ return r.ok ? r.json() : {count:0}; })
           .then(function(d){ tally[n]=num(d.count); })
           .catch(function(){})
