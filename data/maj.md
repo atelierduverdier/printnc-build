@@ -2,7 +2,7 @@
 
 ## Bouton de décalage caméra ajouté
 
-Bouton "CAM VERS OUTIL" qui amène la caméra à la place de la fraise par un déplacement relatif de l'offset caméra/broche, depuis n'importe quelle position. Workflow : poser la fraise sur le point visé → clic (la caméra vient au-dessus du point) → ajustement fin au jog en regardant l'image → REF CAMERA pour poser le zéro pièce. Le bouton et REF CAMERA lisent les mêmes champs (lineEdit_camera_x / camera_y), donc le décalage et la compensation sont cohérents par construction. Plus besoin de passer par X0 Y0 comme avant. La méthode du handler envoie simplement `G91 G0 X[-cam_x] Y[-cam_y]` puis `G90`, via deux CALL_MDI_WAIT.
+Bouton "CAM VERS OUTIL" qui amène la caméra à la place de la fraise par un déplacement relatif de l'offset caméra/broche, depuis n'importe quelle position. Workflow : poser la fraise sur le point visé → clic (la caméra vient au-dessus du point) → ajustement fin au jog en regardant l'image → REF CAMERA pour poser le zéro pièce. Le bouton et REF CAMERA lisent les mêmes champs (lineEdit_camera_x / camera_y), donc le décalage et la compensation sont cohérents par construction. Avant, la méthode consistait à mettre d'abord le XY à zéro, puis à se déplacer en absolu de l'offset (par exemple `G0 X-76 Y-85`) ; désormais, plus besoin de passer par X0 Y0 — le handler envoie simplement un saut relatif `G91 G0 X[-cam_x] Y[-cam_y]` puis `G90`, depuis la position courante, via deux CALL_MDI_WAIT.
 
 ## Bug : la fraise traversait la table au lieu du petit saut (RÉSOLU)
 
@@ -51,8 +51,6 @@ Points clés appris :
 - La ligne `Camview cam api = V4L2` était absente au départ ; sans elle l'API par défaut (ANY) ignorait la demande de résolution.
 
 - Les échelles xscale/yscale sont en pourcentage. C'est le **xscale** (axe X) qu'il faut augmenter pour réétirer une image comprimée horizontalement, pas le yscale. Ajuster à l'œil sur une rondelle (~165).
-
-- 
 
 - Édition à faire **LinuxCNC fermé** : QtDragon réécrit qtdragon.pref à la fermeture et écrase toute modif faite à chaud.
 
