@@ -636,6 +636,18 @@ MODELE = '''<!DOCTYPE html>
   .footer-counter a{color:var(--faint);}
   .footer-counter a:hover{color:var(--orange);}
   .footer-counter #compteur-visites{color:var(--orange);font-weight:600;}
+  /* ---- Widget note de satisfaction ---- */
+  .adv-rate{max-width:22rem;margin:0 auto 28px;padding:1.1rem 1.4rem;border:1px solid var(--line);border-radius:12px;background:var(--surface);text-align:center;}
+  .adv-rate__q{margin:0 0 .6rem;font-size:.95rem;font-weight:600;color:var(--text);}
+  .adv-rate__stars{display:flex;justify-content:center;gap:.1rem;}
+  .adv-rate__star{background:none;border:none;padding:.1rem .15rem;cursor:pointer;font-size:1.9rem;line-height:1;color:var(--faint);transition:color .12s ease,transform .12s ease;}
+  .adv-rate__star:hover,.adv-rate__star:focus-visible{transform:scale(1.12);outline:none;}
+  .adv-rate__star.is-lit{color:var(--orange);}
+  .adv-rate__avg{margin:.65rem 0 0;font-size:.82rem;color:var(--muted);min-height:1.1em;}
+  .adv-rate__avg b{color:var(--orange);font-size:1rem;}
+  .adv-rate.is-done .adv-rate__star{cursor:default;}
+  .adv-rate.is-done .adv-rate__star:hover{transform:none;}
+  @media (prefers-reduced-motion:reduce){.adv-rate__star{transition:none;}.adv-rate__star:hover,.adv-rate__star:focus-visible{transform:none;}}
 </style>
 </head>
 <body>
@@ -770,6 +782,17 @@ __DOC__
 </main>
 <footer>
   <div class="wrap">
+    <div class="adv-rate" id="advRate">
+      <p class="adv-rate__q">Ce site vous a-t-il &eacute;t&eacute; utile&nbsp;?</p>
+      <div class="adv-rate__stars" role="radiogroup" aria-label="Note de 1 a 5">
+        <button class="adv-rate__star" data-note="1" aria-label="1 sur 5">&#9733;</button>
+        <button class="adv-rate__star" data-note="2" aria-label="2 sur 5">&#9733;</button>
+        <button class="adv-rate__star" data-note="3" aria-label="3 sur 5">&#9733;</button>
+        <button class="adv-rate__star" data-note="4" aria-label="4 sur 5">&#9733;</button>
+        <button class="adv-rate__star" data-note="5" aria-label="5 sur 5">&#9733;</button>
+      </div>
+      <p class="adv-rate__avg" id="advRateAvg">&hellip;</p>
+    </div>
     <div class="social">
       <a href="https://www.instagram.com/atelierduverdier/" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
         <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.42.4.68.8.9 1.4.17.4.37 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.05 1.2-.25 1.8-.42 2.2-.22.6-.48 1-.9 1.4-.4.42-.8.68-1.4.9-.4.17-1 .37-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.05-1.8-.25-2.2-.42-.6-.22-1-.48-1.4-.9-.42-.4-.68-.8-.9-1.4-.17-.4-.37-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.05-1.2.25-1.8.42-2.2.22-.6.48-1 .9-1.4.4-.42.8-.68 1.4-.9.4-.17 1-.37 2.2-.42C8.4 2.2 8.8 2.2 12 2.2m0-2.2C8.7 0 8.3 0 7 .07 5.7.13 4.8.33 4.1.6c-.8.3-1.4.7-2.1 1.4C1.3 2.7.9 3.3.6 4.1.33 4.8.13 5.7.07 7 0 8.3 0 8.7 0 12s0 3.7.07 5c.06 1.3.26 2.2.53 2.9.3.8.7 1.4 1.4 2.1.7.7 1.3 1.1 2.1 1.4.7.27 1.6.47 2.9.53C8.3 24 8.7 24 12 24s3.7 0 5-.07c1.3-.06 2.2-.26 2.9-.53.8-.3 1.4-.7 2.1-1.4.7-.7 1.1-1.3 1.4-2.1.27-.7.47-1.6.53-2.9.07-1.3.07-1.7.07-5s0-3.7-.07-5c-.06-1.3-.26-2.2-.53-2.9-.3-.8-.7-1.4-1.4-2.1-.7-.7-1.3-1.1-2.1-1.4-.7-.27-1.6-.47-2.9-.53C15.7 0 15.3 0 12 0z"/><path fill="currentColor" d="M12 5.8a6.2 6.2 0 100 12.4 6.2 6.2 0 000-12.4zm0 10.2a4 4 0 110-8 4 4 0 010 8z"/><circle fill="currentColor" cx="18.4" cy="5.6" r="1.44"/></svg>
@@ -942,6 +965,53 @@ __DOC__
   (function(){
     const tabAccueil=document.querySelector('.tab[data-month="accueil"]');
     if(tabAccueil) tabAccueil.click();
+  })();
+
+  // ---- Widget note de satisfaction : vote + moyenne en direct (GoatCounter) ----
+  (function(){
+    var GC='https://atelierduverdier.goatcounter.com';
+    var DEMO=false;  // passe a true pour previsualiser avec des chiffres factices
+    var box=document.getElementById('advRate'); if(!box) return;
+    var stars=Array.prototype.slice.call(box.querySelectorAll('.adv-rate__star'));
+    var avgEl=document.getElementById('advRateAvg');
+    var voted=false, tally={1:0,2:0,3:0,4:0,5:0};
+    // Anti-revote optionnel : decommente la ligne suivante (et celle dans submit)
+    // if(localStorage.getItem('adv-rate-vote')){ voted=true; }
+    function num(v){ return parseInt(String(v).replace(/[^0-9]/g,''),10)||0; }
+    function totaux(){ var t=0,s=0; for(var n=1;n<=5;n++){ t+=tally[n]; s+=n*tally[n]; } return [t,s]; }
+    function render(){
+      var r=totaux(), t=r[0], s=r[1];
+      if(t>0){ var moy=(s/t).toFixed(1).replace('.',',');
+        avgEl.innerHTML='<b>'+moy+'</b>\u202f/\u202f5 \u00b7 '+t+(t>1?' votes':' vote'); }
+      else{ avgEl.textContent = voted ? 'Merci pour votre note\u202f!' : 'Soyez le premier \u00e0 noter'; }
+    }
+    function lit(n){ stars.forEach(function(s){ s.classList.toggle('is-lit', +s.dataset.note<=n); }); }
+    function repaint(){ var r=totaux(); lit(r[0]>0 ? Math.round(r[1]/r[0]) : 0); }
+    function lock(n){ voted=true; lit(n); box.classList.add('is-done'); stars.forEach(function(s){ s.tabIndex=-1; }); }
+    function submit(n){
+      tally[n]++; lock(n); render();
+      // localStorage.setItem('adv-rate-vote', n);
+      if(window.goatcounter && window.goatcounter.count){
+        window.goatcounter.count({ path:'note-'+n, title:'Note '+n+'/5', event:true });
+      }
+    }
+    stars.forEach(function(star){
+      var n=+star.dataset.note;
+      star.addEventListener('mouseenter', function(){ if(!voted) lit(n); });
+      star.addEventListener('click',      function(){ if(!voted) submit(n); });
+    });
+    box.querySelector('.adv-rate__stars').addEventListener('mouseleave', function(){ if(!voted) repaint(); });
+    (function load(){
+      if(DEMO){ tally={1:1,2:0,3:2,4:7,5:11}; render(); repaint(); return; }
+      var done=0;
+      for(var n=1;n<=5;n++){ (function(n){
+        fetch(GC+'/counter/note-'+n+'.json')
+          .then(function(r){ return r.ok ? r.json() : {count:0}; })
+          .then(function(d){ tally[n]=num(d.count); })
+          .catch(function(){})
+          .finally(function(){ if(++done===5){ render(); repaint(); } });
+      })(n); }
+    })();
   })();
 </script>
 </body>
