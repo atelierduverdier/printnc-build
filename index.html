@@ -3145,9 +3145,9 @@ Camera Y = &lt;offset mesuré&gt;</pre>
     if(tabAccueil) tabAccueil.click();
   })();
 
-  // ---- Widget note de satisfaction : vote + moyenne en direct (GoatCounter) ----
+  // ---- Widget note de satisfaction : vote + moyenne en direct (Cloudflare Worker) ----
   (function(){
-    var GC='https://atelierduverdier.goatcounter.com';
+    var WORKER='https://printnc-notes.leverdier.workers.dev';  // <-- mets l'URL de ton Worker ici
     var DEMO=false;  // passe a true pour previsualiser avec des chiffres factices
     var box=document.getElementById('advRate'); if(!box) return;
     var stars=Array.prototype.slice.call(box.querySelectorAll('.adv-rate__star'));
@@ -3156,6 +3156,7 @@ Camera Y = &lt;offset mesuré&gt;</pre>
     // Anti-revote optionnel : decommente la ligne suivante (et celle dans submit)
     // if(localStorage.getItem('adv-rate-vote')){ voted=true; }
     function num(v){ return parseInt(String(v).replace(/[^0-9]/g,''),10)||0; }
+    function normalize(d){ var o={1:0,2:0,3:0,4:0,5:0}; for(var n=1;n<=5;n++){ o[n]=num(d&&d[n]); } return o; }
     function totaux(){ var t=0,s=0; for(var n=1;n<=5;n++){ t+=tally[n]; s+=n*tally[n]; } return [t,s]; }
     function render(){
       var r=totaux(), t=r[0], s=r[1];
@@ -3167,12 +3168,12 @@ Camera Y = &lt;offset mesuré&gt;</pre>
     function repaint(){ var r=totaux(); lit(r[0]>0 ? Math.round(r[1]/r[0]) : 0); }
     function lock(n){ voted=true; lit(n); box.classList.add('is-done'); stars.forEach(function(s){ s.tabIndex=-1; }); }
     function submit(n){
-      tally[n]++; lock(n); render();
+      lock(n); tally[n]++; render();   // affichage optimiste immediat
       // localStorage.setItem('adv-rate-vote', n);
-      if(window.goatcounter && window.goatcounter.count){
-        // Page vue (et non event) sur un chemin dedie : lisible via /counter/...json
-        window.goatcounter.count({ path:'/note/'+n, title:'Note '+n+'/5' });
-      }
+      fetch(WORKER, { method:'POST', body:String(n) })   // POST texte simple = pas de preflight CORS
+        .then(function(r){ return r.json(); })
+        .then(function(d){ tally=normalize(d); render(); repaint(); })
+        .catch(function(){});   // si le Worker ne repond pas, on garde l'affichage optimiste
     }
     stars.forEach(function(star){
       var n=+star.dataset.note;
@@ -3182,14 +3183,11 @@ Camera Y = &lt;offset mesuré&gt;</pre>
     box.querySelector('.adv-rate__stars').addEventListener('mouseleave', function(){ if(!voted) repaint(); });
     (function load(){
       if(DEMO){ tally={1:1,2:0,3:2,4:7,5:11}; render(); repaint(); return; }
-      var done=0;
-      for(var n=1;n<=5;n++){ (function(n){
-        fetch(GC+'/counter/'+encodeURIComponent('/note/'+n)+'.json')
-          .then(function(r){ return r.ok ? r.json() : {count:0}; })
-          .then(function(d){ tally[n]=num(d.count); })
-          .catch(function(){})
-          .finally(function(){ if(++done===5){ render(); repaint(); } });
-      })(n); }
+      fetch(WORKER)
+        .then(function(r){ return r.json(); })
+        .then(function(d){ tally=normalize(d); })
+        .catch(function(){})
+        .finally(function(){ render(); repaint(); });
     })();
   })();
 </script>
