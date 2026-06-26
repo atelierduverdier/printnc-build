@@ -1,3 +1,9 @@
+# 26 juin 2026 — Référence caméra de positionnement ajoutée à la BOM
+
+## Caméra référencée (27 €)
+
+Ajout de la référence d'achat de la caméra de positionnement (vue CAMVIEW) dans la BOM : caméra USB 2k Redeagle + objectif C-mount 5-50 mm, achetée 27 € sur AliExpress (https://fr.aliexpress.com/item/1005008742183752.html). La ligne caméra de la section « Électronique — Interface » passe de « — » à 27 € avec lien produit cliquable. Sous-total Interface : 118.98 € → 145.98 €. Total général : articles 3781.33 € → 3808.33 €, total final 4045.75 € → 4072.75 €.
+
 # 24 juin 2026 — Bouton CAM VERS OUTIL (décalage caméra/broche)
 
 ## Bouton de décalage caméra ajouté

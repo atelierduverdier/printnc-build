@@ -105,8 +105,8 @@ Liste complète du matériel pour la construction de la PrintNC, avec les prix p
 | [Ventilateurs](https://www.aliexpress.com/item/1005003071813339.html?spm=a2g0o.order_list.order_list_main.117.4ce11802hMwK90) | 1 |  | 30.03€ | 30.03 € |
 | [Ventilateurs 2x 24v](https://www.aliexpress.com/item/1005003071813339.html?spm=a2g0o.order_list.order_list_main.117.4ce11802hMwK90) | 1 |  | 20.05€ | 20.05 € |
 | [Bouton ON/OFF](https://www.amazon.fr/dp/B09Y23XLX8?ref=ppx_yo2ov_dt_b_fed_asin_title) | 1 |  | 15.99€ | 15.99 € |
-| Caméra USB 2k Redeagle + objectif C-mount 5-50 mm | 1 | Positionnement (vue CAMVIEW) | — | — |
-| **Sous-total** | | | | **118.98 €** |
+| [Caméra USB 2k Redeagle + objectif C-mount 5-50 mm](https://fr.aliexpress.com/item/1005008742183752.html) | 1 | Positionnement (vue CAMVIEW) | 27€ | 27.00 € |
+| **Sous-total** | | | | **145.98 €** |
 
 ## Électronique — Capteurs
 
@@ -161,10 +161,10 @@ Liste complète du matériel pour la construction de la PrintNC, avec les prix p
 
 | | Montant |
 |---|---|
-| Articles | 3781.33 € |
+| Articles | 3808.33 € |
 | Frais de port | 311.95 € |
 | Remises | -47.53 € |
-| **Total final** | **4045.75 €** |
+| **Total final** | **4072.75 €** |
 
 > Prix payés au moment de l'achat début 2026. Prévoir une marge de ±20% selon les promotions et les fluctuations de change.
 
@@ -509,7 +509,7 @@ Un PC x86_64 sous Debian sert au développement de l'interface en simulation, sy
 **Règle d'or git** : `git pull` en arrivant sur une machine, `push` en partant. Un script push-config (range hors dépôt) demande un message puis fait add + commit + push. L'authentification GitHub se fait par token personnel (le mot de passe n'est plus accepte). Un .gitignore exclut les fichiers propres a chaque machine (linuxcnc.var, qtdragon.pref, fichiers temporaires).
 
 ## Caméra de positionnement (CAMVIEW)
-Caméra USB 2k Redeagle (capteur HD 16:9) + objectif C-mount varifocal 5-50 mm, affichée dans l'onglet CAMVIEW de QtDragon (widget camview de qtvcp, OpenCV). Sert au touch off X/Y visuel : on positionne le réticule sur un point de la pièce, le bouton REF CAMERA pose le zéro à l'aplomb de la broche.
+Caméra USB 2k Redeagle (capteur HD 16:9) + objectif C-mount varifocal 5-50 mm, affichée dans l'onglet CAMVIEW de QtDragon (widget camview de qtvcp, OpenCV). Sert au touch off X/Y visuel : on positionne le réticule sur un point de la pièce, le bouton REF CAMERA pose le zéro à l'aplomb de la broche. Référence d'achat : [caméra 2k Redeagle sur AliExpress](https://fr.aliexpress.com/item/1005008742183752.html) (27 €).
 
 Réglages dans qtdragon.pref, section [CUSTOM_FORM_ENTRIES] (éditer **LinuxCNC fermé**, sinon QtDragon réécrit le fichier a la fermeture) :
 ```ini
