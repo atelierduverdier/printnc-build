@@ -117,6 +117,12 @@ def markdown_vers_html(md):
                 cells_html = ''.join(f'<{tag}>{esc(c)}</{tag}>' for c in cells)
                 rows.append(f'<tr>{cells_html}</tr>')
             out.append('<table class="doc-table">' + ''.join(rows) + '</table>')
+        elif ln.strip().startswith('!['):
+            import re as _re
+            m = _re.match(r'!\[([^\]]*)\]\(([^)]+)\)', ln.strip())
+            if m:
+                alt, url = m.group(1), m.group(2)
+                out.append(f'<figure class="doc-photo"><img src="{url}" alt="{alt}" loading="lazy"><figcaption>{alt}</figcaption></figure>')
         elif ln.strip():
             # paragraphe : accumuler les lignes consecutives non vides hors code/titres/tableaux
             para = [esc(ln.strip())]

@@ -12,7 +12,7 @@ Ajout de `installer_dependances.sh` qui détecte la distribution (Arch/CachyOS/M
 
 Le kit adopte un modèle à deux licences : **MIT** pour le code source (scripts Python et shell), **CC BY-SA 4.0** pour la documentation et les designs (Markdown, HTML, CSS, favicon, photos, textes). Le détail figure dans le fichier `LICENSE` et le `README.md` du kit.
 
----
+![PrintNC - Orange Mécanique](photos/GestionSite.png)
 
 # 26 juin 2026 — Référence caméra de positionnement ajoutée à la BOM
 
