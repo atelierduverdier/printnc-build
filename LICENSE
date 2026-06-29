@@ -1,0 +1,65 @@
+PrintNC Build Log — Atelier du Verdier
+https://github.com/atelierduverdier/printnc-build
+
+Le code source (scripts Python et shell), la documentation (fichiers Markdown),
+le design du site (CSS, HTML genere, favicon, illustrations) et les contenus
+(redaction, videos) sont la propriete intellectuelle de Christophe Crouay
+(alias Atelier du Verdier), 2026.
+
+-------------------------------------------------------------------------------
+LICENCES
+-----------------------------------------------------------------------------
+
+Ce depot utilise deux licences complementaires, selon la nature des fichiers :
+
+1. CODE SOURCE (scripts .py, .sh)
+   Licence MIT (Expat)
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
+
+2. DOCUMENTATION, DESIGNS ET CONTENUS (fichiers .md, .html genere, CSS,
+   favicon, photos, textes redactionnels)
+   Licence Creative Commons Attribution-ShareAlike 4.0 International
+   (CC BY-SA 4.0)
+   https://creativecommons.org/licenses/by-sa/4.0/
+
+   Vous etes libre de :
+   - Partager — copier, redistribuer le materiel par tout moyen ou format
+   - Adapter — remixer, transformer et creer a partir du materiel
+
+   Sous les conditions suivantes :
+   - Attribution — Vous devez crediterez l'auteur original, fournir un lien
+     vers la licence et indiquer si des modifications ont ete effectuees.
+   - ShareAlike — Si vous modifiez, transformez ou creer a partir du materiel,
+     vous devez distribuer vos contributions sous la meme licence que
+     l'original.
+
+-------------------------------------------------------------------------------
+RESUME
+-----------------------------------------------------------------------------
+
+| Quoi                   | Licence        | Copyleft ? |
+|------------------------|----------------|------------|
+| Scripts (Python, shell) | MIT (Expat)    | Non        |
+| Doc, designs, contenus | CC BY-SA 4.0   | Oui        |
+
+En pratique :
+- Tu peux utiliser les scripts librement, meme dans un projet ferme (MIT).
+- Tu peux reprendre la documentation et les designs, mais toute version
+  modifiee doit rester sous CC BY-SA 4.0 (partage dans les memes conditions).

@@ -1,3 +1,19 @@
+# 28 juin 2026 — Interface graphique de gestion du site (gestion_site.py)
+
+## Nouvelle interface graphique Qt6
+
+Ajout d'une interface graphique (`gestion_site.py`, PySide6/Qt6) qui regroupe toutes les opérations de maintenance du site dans une seule fenêtre : tableau de bord (statistiques, répartition par phase, état Git), génération du site, ajout de vidéo (avec aperçu miniature et chaîne automatique archive → miniature → CSV → regen), génération de miniatures en lot, synchronisation Git (status / pull / commit + push) et édition des fichiers de données. Remplace l'ancien `goup_site.sh` absent. Console intégrée affichant les commandes et leur sortie en temps réel. Thème dark/orange cohérent avec le site, favicon intégré en barre latérale.
+
+## Script d'installation multi-distribution
+
+Ajout de `installer_dependances.sh` qui détecte la distribution (Arch/CachyOS/Manjaro, Debian/Ubuntu/Mint, Fedora) et installe automatiquement toutes les dépendances : Python, PySide6, pyserial, ffmpeg, git et les librairies runtime Qt (Wayland/X11). Si PySide6 n'est pas dans les dépôts, le script crée un virtualenv et un lanceur `lancer_gestion_site.sh`. Vérification finale des 5 dépendances.
+
+## Licences
+
+Le kit adopte un modèle à deux licences : **MIT** pour le code source (scripts Python et shell), **CC BY-SA 4.0** pour la documentation et les designs (Markdown, HTML, CSS, favicon, photos, textes). Le détail figure dans le fichier `LICENSE` et le `README.md` du kit.
+
+---
+
 # 26 juin 2026 — Référence caméra de positionnement ajoutée à la BOM
 
 ## Caméra référencée (27 €)

@@ -11,11 +11,15 @@ printnc-build/                (depot GitHub, racine = site publie)
 ├── photos/                 Photos affichees dans la documentation
 ├── miniatures/             Vignettes .jpg des videos
 └── kit_site/               Outils de generation du site
-    ├── ajouter_video.sh        Ajoute une video au site en une commande (recommande)
-    ├── goup_site.sh            Envoie le site (commit + push) vers GitHub
-    ├── convertir_photos.sh     Redimensionne les photos pour le web
+    ├── gestion_site.py        Interface graphique Qt6 (RECOMMANDE — tout en un)
+    ├── installer_dependances.sh  Installe les deps (Arch / Debian / Fedora)
+    ├── ajouter_video.sh        Ajoute une video en ligne de commande (alternative)
     ├── generer_miniatures.sh   Extrait une vignette JPG de chaque video .mp4
+    ├── convertir_photos.sh     Redimensionne les photos pour le web
     ├── generer_site.py         Genere index.html depuis les fichiers data/
+    ├── favicon.svg             Logo du site (chapeau Orange Mecanique)
+    ├── LICENSE                 Licences MIT (code) + CC BY-SA 4.0 (doc)
+    ├── LISEZMOI.md             Aide-memoire rapide
     ├── data/
     │   ├── videos.csv          Liste des videos (date, phase, fichier, lien, texte)
     │   ├── maj.md               Changelog technique (onglet "Mises a jour")
@@ -31,7 +35,77 @@ printnc-build/                (depot GitHub, racine = site publie)
 
 ---
 
-## `ajouter_video.sh` (recommande)
+## `gestion_site.py` — interface graphique (le plus simple)
+
+Interface graphique (PySide6/Qt) qui regroupe **toutes** les operations dans
+une seule fenetre : tableau de bord, generation du site, ajout de video,
+generation de miniatures, synchronisation Git et edition des fichiers de
+donnees. C'est le point d'entree recommande au quotidien.
+
+### Installation des dependances (Arch / Debian / Fedora)
+
+Un script d'installation automatique detecte ta distribution et installe
+tout le necessaire : Python, PySide6, pyserial, ffmpeg, git + les librairies
+runtime Qt (Wayland/X11).
+
+```bash
+./installer_dependances.sh
+```
+
+| Distribution | Packages installes |
+| --- | --- |
+| Arch / CachyOS / Manjaro | `python python-pyserial ffmpeg git python-pyside6` (pacman) |
+| Debian / Ubuntu / Mint | `python3 python3-serial ffmpeg git` + PySide6 via pip (venv) |
+| Fedora | `python3 python3-pyserial ffmpeg git` + `python3-pyside6` (dnf) |
+
+> Si PySide6 n'est pas dans les depots de ta distribution (Debian, certains
+> derives d'Arch), le script cree automatiquement un virtualenv dans
+> `~/.venv/kit_site` et genere un lanceur `./lancer_gestion_site.sh` qu'il
+> faudra utiliser a la place de `python3 gestion_site.py`.
+
+**Dependances detaillees** :
+
+| Dependance | Rôle | Obligatoire ? |
+| --- | --- | --- |
+| `python3` (>= 3.8) | interpreteur | oui |
+| `PySide6` (Qt6) | interface graphique `gestion_site.py` | oui |
+| `ffmpeg` | miniatures des videos (`Ajouter une video`, `Miniatures`) | oui |
+| `git` | publication sur GitHub (page `Git`) | oui |
+| `pyserial` | lecture VFD (`lire_vfd.py`) | non (sauf VFD) |
+
+### Lancement (depuis le dossier `kit_site/`)
+
+```bash
+python3 gestion_site.py
+# ou, si PySide6 est dans un venv :
+./lancer_gestion_site.sh
+```
+
+La fenetre propose une barre laterale avec six sections :
+
+- **Tableau de bord** — nombre de videos, mois couverts, repartition par phase
+  (mecanique / electronique / LinuxCNC) et etat du depot Git (a jour, en
+  avance, en retard).
+- **Generer le site** — relance `generer_site.py` et (option) ouvre
+  `index.html` dans le navigateur.
+- **Ajouter une video** — selection du fichier, aperçu de la miniature, saisie
+  de la date / phase / lien / legende, puis enchainement automatique : archive
+  source, generation de la miniature (ffmpeg), ajout dans `videos.csv`,
+  regeneration du site. Detection des doublons.
+- **Miniatures** — genere les vignettes manquantes d'un dossier de videos.
+- **Git — publier** — liste les fichiers modifies, `git pull`, et
+  `commit` + `push` (avec message personnalise). Remplace l'ancien
+  `goup_site.sh`.
+- **Donnees** — ouvre `videos.csv`, `recit.md`, `maj.md`, `doc.md` dans ton
+  editeur, avec un apercu du CSV.
+
+Une **console** en bas affiche en temps reel les commandes lancees et leur
+sortie (avec coloration des erreurs). Les taches s'executent l'une apres
+l'autre, en arriere-plan, sans bloquer l'interface.
+
+---
+
+## `ajouter_video.sh` (alternative en ligne de commande)
 
 Ajoute une nouvelle video au site **en une seule commande** : copie la video,
 genere sa miniature, demande les informations, met a jour `videos.csv` et
@@ -396,3 +470,26 @@ ADRESSE = 0x01
 
 Les paramètres lus sont documentés dans la section « Paramètres du VFD »
 de la documentation du site (onglet Documentation).
+
+---
+
+## Licences
+
+Ce depot utilise deux licences complementaires, selon la nature des fichiers :
+
+| Quoi | Licence | Copyleft ? |
+| --- | --- | --- |
+| Scripts (Python, shell) | **MIT (Expat)** | Non — libre d'utilisation, y compris dans un projet ferme |
+| Documentation, designs, contenus (Markdown, HTML, CSS, favicon, photos, textes redactionnels) | **CC BY-SA 4.0** | Oui — toute modification doit etre partagee sous la meme licence |
+
+**En pratique :**
+
+- Tu peux utiliser les scripts (`gestion_site.py`, `generer_site.py`,
+  `ajouter_video.sh`, etc.) librement, meme dans un projet commercial ou
+  proprietaire (licence MIT).
+- Tu peux reprendre la documentation, les designs du site, les textes et
+  les photos, mais toute version modifiee doit rester publiee sous
+  **CC BY-SA 4.0** (partage dans les memes conditions, attribution
+  obligatoire).
+
+Voir le fichier [LICENSE](LICENSE) pour le texte integral des deux licences.
