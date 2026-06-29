@@ -133,7 +133,9 @@ def markdown_vers_html(md):
                 para.append(esc(lignes[i].strip()))
             txt = ' '.join(para)
             import re as _re
+            txt = _re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', txt)
             txt = _re.sub(r'`([^`]+)`', r'<code>\1</code>', txt)
+            txt = _re.sub(r'\[([^\]]+)\]\((https?://[^)]+)\)', r'<a href="\2" target="_blank" rel="noopener">\1</a>', txt)
             out.append(f'<p class="maj-desc">{txt}</p>')
         i += 1
     return '\n'.join(out)
