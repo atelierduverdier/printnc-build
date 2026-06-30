@@ -187,15 +187,23 @@ class Runner(QObject):
         self._queue = deque()   # de taches : ('cmd', ...) ou ('py', callable)
         self._proc = None
         self._busy = False
+        self._halt_on_error = False  # command en cours doit bloquer la file ?
 
     @property
     def busy(self):
         return self._busy
 
     # -- Empilement ------------------------------------------------------
-    def cmd(self, command, args=None, cwd=KIT_DIR, title=None, env=None):
-        """Empile une commande externe."""
-        self._queue.append(('cmd', command, args or [], cwd, title, env))
+    def cmd(self, command, args=None, cwd=KIT_DIR, title=None, env=None,
+            halt_on_error=False):
+        """Empile une commande externe.
+
+        Si halt_on_error=True et que la commande echoue (code de sortie != 0),
+        le reste de la file est vide : les taches suivantes (push, regen...)
+        ne s'executeront pas. Pratique pour eviter de pousser sur une base
+        git cassee apres un pull/rebase qui n'a pas abouti."""
+        self._queue.append(('cmd', command, args or [], cwd, title, env,
+                            halt_on_error))
         self._pump()
 
     def then(self, func, title=None):
@@ -205,10 +213,12 @@ class Runner(QObject):
         self._queue.append(('py', func, title))
         self._pump()
 
-    def inject(self, command, args=None, cwd=KIT_DIR, title=None, env=None):
+    def inject(self, command, args=None, cwd=KIT_DIR, title=None, env=None,
+               halt_on_error=False):
         """Insere une commande juste apres la tache courante (en tete de la
         file restante). Utilisable depuis un callback then()."""
-        self._queue.appendleft(('cmd', command, args or [], cwd, title, env))
+        self._queue.appendleft(('cmd', command, args or [], cwd, title, env,
+                                halt_on_error))
 
     def clear(self):
         self._queue.clear()
@@ -238,7 +248,8 @@ class Runner(QObject):
             # enchainement immediat
             QTimer.singleShot(0, self._pump)
         else:
-            _, command, args, cwd, title, env = task
+            _, command, args, cwd, title, env, halt_on_error = task
+            self._halt_on_error = halt_on_error
             if title:
                 self.console.append(f"──── {title} ────", 'title')
             self.console.append(f"$ {command} {' '.join(args)}", 'cmd')
@@ -259,10 +270,25 @@ class Runner(QObject):
             self.console.append(ln)
 
     def _finished(self, code, _status):
+        halt = False
         if code != 0:
             self.console.append(f"(code de sortie : {code})", 'err')
+            if self._halt_on_error:
+                # La commande demandait d'arreter la file en cas d'echec :
+                # on jette le reste (push, regen...) pour ne pas pousser sur
+                # une base cassee. L'utilisateur corrige puis relance.
+                halt = True
+        self._halt_on_error = False
         self._proc = None
-        QTimer.singleShot(0, self._pump)
+        if halt:
+            n = len(self._queue)
+            self._queue.clear()
+            self.console.append(
+                f"(file interrompue : {n} tache(s) annulee(s) "
+                f"apres cet echec)", 'err')
+            self._set_busy(False)
+        else:
+            QTimer.singleShot(0, self._pump)
 
 
 # =========================================================================
@@ -1059,6 +1085,13 @@ class GitPage(QWidget):
     def _enqueue_push(self):
         env = QProcessEnvironment.systemEnvironment()
         env.insert('GIT_TERMINAL_PROMPT', '0')  # pas de prompt interactif
+        # Récupère d'abord les changements distants (--rebase = historique
+        # linéaire). Si le pull échoue (ex. divergence avec conflits),
+        # halt_on_error empêche le push : on ne pousse jamais sur une base
+        # désynchronisée, qui serait de toute façon rejetée en non-fast-forward.
+        self.runner.cmd('git', ['pull', '--rebase'], cwd=KIT_DIR,
+                        title="git pull --rebase (synchro avant push)",
+                        env=env, halt_on_error=True)
         self.runner.cmd('git', ['push'], cwd=KIT_DIR, title="git push", env=env)
 
 
