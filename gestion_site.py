@@ -31,7 +31,7 @@ from collections import Counter, deque
 from PySide6.QtCore import (
     Qt, QProcess, QProcessEnvironment, QDate, QTimer, QUrl, QByteArray, QRectF, Signal, QObject
 )
-from PySide6.QtGui import QFont, QColor, QPixmap, QIcon, QTextCursor, QPainter, QDesktopServices
+from PySide6.QtGui import QFont, QColor, QPixmap, QIcon, QTextCursor, QPainter, QDesktopServices, QPalette
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -721,7 +721,8 @@ class VideoPage(QWidget):
     def pick_file(self):
         path, _ = QFileDialog.getOpenFileName(
             self, "Choisir une video", os.path.expanduser('~'),
-            "Videos (*.mp4 *.mov *.avi *.mkv);;Tous les fichiers (*)")
+            "Videos (*.mp4 *.mov *.avi *.mkv);;Tous les fichiers (*)",
+            "", QFileDialog.Option.DontUseNativeDialog)
         if path:
             self.video_path = path
             self.edit_file.setText(path)
@@ -885,7 +886,8 @@ class MiniaturesPage(QWidget):
 
     def pick_dir(self):
         d = QFileDialog.getExistingDirectory(
-            self, "Dossier des videos", os.path.expanduser('~'))
+            self, "Dossier des videos", os.path.expanduser('~'),
+            QFileDialog.Option.DontUseNativeDialog)
         if d:
             self._src_dir = d
             self.edit_dir.setText(d)
@@ -1446,11 +1448,59 @@ def _filtrer_warnings_qt():
     qInstallMessageHandler(_handler)
 
 
+def _palette_sombre(app):
+    """Applique une palette sombre a toute l'application.
+
+    La feuille de style QSS ne couvre pas les dialogues natifs (QFileDialog,
+    QMessageBox) : ils suivent par defaut le theme systeme (souvent clair),
+    ce qui donne un contraste casse (texte clair sur fond clair, ou inverse).
+    Une palette sombre garantit un rendu coherent partout.
+    """
+    p = QPalette()
+
+    def col(h):  # raccourci de saisie
+        c = QColor()
+        c.setNamedColor(h)
+        return c
+
+    # Fenetres / fonds
+    p.setColor(QPalette.Window, col('#13110e'))
+    p.setColor(QPalette.Base, col('#13110e'))          # champs de saisie, listes
+    p.setColor(QPalette.AlternateBase, col('#1c1916'))
+    p.setColor(QPalette.ToolTipBase, col('#1c1916'))
+    p.setColor(QPalette.ToolTipText, col('#f0ebe2'))
+
+    # Texte
+    p.setColor(QPalette.WindowText, col('#f0ebe2'))
+    p.setColor(QPalette.Text, col('#f0ebe2'))
+    p.setColor(QPalette.ButtonText, col('#f0ebe2'))
+    p.setColor(QPalette.PlaceholderText, col('#6b6356'))
+    p.setColor(QPalette.BrightText, col('#ff7a55'))
+
+    # Boutons
+    p.setColor(QPalette.Button, col('#1c1916'))
+    p.setColor(QPalette.Shadow, col('#000000'))
+
+    # Selection + accent (orange PrintNC)
+    p.setColor(QPalette.Highlight, col('#e8821e'))
+    p.setColor(QPalette.HighlightedText, col('#13110e'))
+    p.setColor(QPalette.Link, col('#e8821e'))
+    p.setColor(QPalette.LinkVisited, col('#c46a10'))
+
+    # Rols "desactives"
+    p.setColor(QPalette.Disabled, QPalette.WindowText, col('#6b6356'))
+    p.setColor(QPalette.Disabled, QPalette.Text, col('#6b6356'))
+    p.setColor(QPalette.Disabled, QPalette.ButtonText, col('#6b6356'))
+
+    app.setPalette(p)
+
+
 def main():
     app = QApplication(sys.argv)
     _filtrer_warnings_qt()
     app.setApplicationName("Gestion site PrintNC")
     app.setStyleSheet(QSS)
+    _palette_sombre(app)
     # Icone de fenetre = favicon du site
     icon_pm = load_svg_icon(FAVICON, size=128)
     if icon_pm and not icon_pm.isNull():
