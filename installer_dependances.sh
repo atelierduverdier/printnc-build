@@ -60,6 +60,14 @@ if [ "$(id -u)" -eq 0 ]; then
     warn "Il vaut mieux le lancer en utilisateur normal (sudo sera demande)."
 fi
 
+# --- Verification de la version Python minimale (3.8) ---
+if [ "$(python3 -c 'import sys; print(sys.version_info < (3, 8))')" = "True" ]; then
+    err "Python 3.8 ou superieur est requis."
+    err "Version actuelle : $(python3 --version 2>&1)"
+    exit 1
+fi
+ok "Version Python valide : $(python3 --version 2>&1)"
+
 # =========================================================================
 #  Fonction : creer un lanceur si PySide6 est installe via venv
 # =========================================================================
@@ -70,7 +78,13 @@ creer_lanceur() {
 #!/usr/bin/env bash
 # Lanceur genere par installer_dependances.sh
 # PySide6 est installe dans un virtualenv : on l'active avant de lancer.
-source "$VENV_DIR/bin/activate"
+VENV_DIR="$VENV_DIR"
+if [ ! -d "\$VENV_DIR" ]; then
+    echo "Erreur : virtualenv introuvable dans \$VENV_DIR"
+    echo "Relance : ./installer_dependances.sh"
+    exit 1
+fi
+source "\$VENV_DIR/bin/activate"
 exec python3 "$SCRIPT_DIR/gestion_site.py" "\$@"
 EOF
     chmod +x "$LAUNCHER"
@@ -105,6 +119,13 @@ if [[ "$DISTRO" == "arch" || "$DISTRO" == "cachyos" || "$DISTRO" == "manjaro" \
     if pacman -Si python-pyside6 >/dev/null 2>&1; then
         sudo pacman -S --needed python-pyside6
         ok "PySide6 installe via pacman (paquet systeme)."
+        # WebEngine : optionnel, pour l'apercu integre du site
+        if pacman -Si python-pyside6-WebEngine >/dev/null 2>&1; then
+            sudo pacman -S --needed python-pyside6-WebEngine && \
+                ok "PySide6 WebEngine installe (apercu integre du site)." || \
+                warn "python-pyside6-WebEngine non installe (apercu integre " \
+                     "indisponible, le site s'ouvrira dans le navigateur)."
+        fi
     else
         warn "python-pyside6 absent des depots -> installation via pip (virtualenv)."
         VENV_DIR="$HOME/.venv/kit_site"
@@ -238,6 +259,15 @@ check_module() {
     return 0
 }
 
+check_import() {
+    # $1 = module Python, $2 = nom affichable, $3 = binaire python (optionnel)
+    # Ne verifie que l'import, sans lire __version__ (utile pour les sous-modules)
+    local bin="${3:-$PYTHON_BIN}"
+    "$bin" -c "import $1" 2>/dev/null || return 1
+    ok "$2 OK"
+    return 0
+}
+
 check_cmd() {
     # $1 = commande, $2 = nom affichable
     local ver
@@ -256,8 +286,17 @@ if check_module PySide6 "PySide6"; then
     NB_OK=$((NB_OK + 1))
 fi
 
-# pyserial — verifier avec le python SYSTEME (pas le venv, qui ne l'a pas)
-# car pyserial est installe via pacman/apt/dnf, pas dans le venv PySide6
+# PySide6 WebEngine — optionnel, pour l'apercu integre du site
+if check_import PySide6.QtWebEngineWidgets "PySide6 WebEngine (optionnel)"; then
+    info "Apercu integre du site disponible."
+else
+    warn "PySide6 WebEngine absent — l'apercu du site s'ouvrira dans le " \
+         "navigateur. Pour l'activer sur Arch : sudo pacman -S " \
+         "python-pyside6-WebEngine"
+fi
+
+# pyserial — verifier avec le python SYSTEME (pas le venv)
+# car pyserial est installe via pacman/apt/dnf, et utilise par lire_vfd.py
 if check_module serial "pyserial" "python3"; then
     NB_OK=$((NB_OK + 1))
 fi

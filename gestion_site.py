@@ -26,20 +26,34 @@ import sys
 import shutil
 import tempfile
 import subprocess
+import functools
 from collections import Counter, deque
 
 from PySide6.QtCore import (
-    Qt, QProcess, QProcessEnvironment, QDate, QTimer, QUrl, QByteArray, QRectF, Signal, QObject
+    Qt, QProcess, QProcessEnvironment, QDate, QTimer, QUrl, QByteArray, QRectF, Signal, QObject,
+    QMimeData
 )
-from PySide6.QtGui import QFont, QColor, QPixmap, QIcon, QTextCursor, QPainter, QDesktopServices, QPalette
+from PySide6.QtGui import (
+    QFont, QColor, QPixmap, QIcon, QTextCursor, QPainter, QDesktopServices, QPalette,
+    QDropEvent, QDragEnterEvent, QDragMoveEvent
+)
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
     QPushButton, QLabel, QLineEdit, QComboBox, QDateEdit, QPlainTextEdit,
     QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QStackedWidget,
     QFrame, QProgressBar, QStatusBar, QCheckBox, QTableWidget,
-    QTableWidgetItem, QHeaderView, QScrollArea, QSplitter
+    QTableWidgetItem, QHeaderView, QScrollArea, QSplitter, QSlider, QDialog,
+    QDialogButtonBox
 )
+# Aperçu intégré optionnel : WebEngine peut manquer (paquet séparé sur Arch :
+# python-pyside6-WebEngine). Import protégé => repli sur ouverture navigateur.
+try:
+    from PySide6.QtWebEngineWidgets import QWebEngineView
+    WEBENGINE = True
+except ImportError:
+    QWebEngineView = None
+    WEBENGINE = False
 
 # --------------------------------------------------------------------------
 #  Configuration & theme (palette reprise du site PrintNC : dark + orange)
@@ -337,28 +351,58 @@ def lire_videos():
     return out
 
 
+def _champ_csv(v):
+    """Echappe un champ CSV selon RFC 4180 (guillemets doubles) : on quote
+    uniquement si le champ contient une virgule, un guillemet ou un saut de
+    ligne."""
+    v = v or ''
+    if ',' in v or '"' in v or '\n' in v:
+        return '"' + v.replace('"', '""') + '"'
+    return v
+
+
+def _ligne_csv(date, phase, fichier, lien, texte):
+    return ','.join(_champ_csv(x) for x in [date, phase, fichier, lien, texte])
+
+
 def ecrire_ligne_csv(date, phase, fichier, lien, texte):
     """Ajoute une ligne au CSV en respectant le format CRLF d'origine et
     l'echappement RFC 4180 (guillemets doubles)."""
     os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
-    existe = os.path.exists(CSV_PATH)
-
-    def champ(v):
-        v = v or ''
-        if ',' in v or '"' in v or '\n' in v:
-            return '"' + v.replace('"', '""') + '"'
-        return v
-    ligne = ','.join(champ(x) for x in [date, phase, fichier, lien, texte])
-    # Ouvrir en mode append binaire pour ecrire le CRLF tel quel.
+    ligne = _ligne_csv(date, phase, fichier, lien, texte)
+    # Garantit un CRLF avant la nouvelle ligne si le fichier existe deja et
+    # ne se termine pas par un saut de ligne (lecture simple, sans rouvrir
+    # le fichier en ecriture simultanement).
+    prefixe = ''
+    if os.path.exists(CSV_PATH) and os.path.getsize(CSV_PATH) > 0:
+        with open(CSV_PATH, 'rb') as chk:
+            chk.seek(0, 2)
+            if chk.tell() > 0:
+                chk.seek(max(0, chk.tell() - 2))
+                if chk.read(2) != b'\r\n':
+                    prefixe = '\r\n'
     with open(CSV_PATH, 'a', encoding='utf-8', newline='') as f:
-        if existe and os.path.getsize(CSV_PATH) > 0:
-            with open(CSV_PATH, 'rb') as chk:
-                chk.seek(0, 2)
-                if chk.tell() > 0:
-                    chk.seek(max(0, chk.tell() - 2))
-                    if chk.read(2) != b'\r\n':
-                        f.write('\r\n')
+        if prefixe:
+            f.write(prefixe)
         f.write(ligne + '\r\n')
+
+
+def ecrire_videos_csv(rows):
+    """Reecrit tout le CSV videos.csv a partir d'une liste de dicos {date,
+    phase, fichier, lien, texte}. L'ordre des lignes est indifferent car
+    generer_site.py retri par date au chargement.
+
+    Sauvegarde preventive en .bak : le CSV est l'unique source de donnees,
+    on ne veut jamais le perdre sur une ecriture cassee."""
+    os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
+    if os.path.exists(CSV_PATH):
+        shutil.copy2(CSV_PATH, CSV_PATH + '.bak')
+    with open(CSV_PATH, 'w', encoding='utf-8', newline='') as f:
+        f.write('date,phase,fichier,lien,texte\r\n')
+        for r in rows:
+            f.write(_ligne_csv(r.get('date', ''), r.get('phase', ''),
+                               r.get('fichier', ''), r.get('lien', ''),
+                               r.get('texte', '')) + '\r\n')
 
 
 def label_muted(text, min_w=110):
@@ -431,6 +475,18 @@ def run_git_sync(args, timeout=10):
         return p.stdout.strip(), p.returncode
     except Exception:
         return '', 1
+
+
+@functools.lru_cache(maxsize=1)
+def upstream_ref():
+    """Retourne la reference upstream (ex. 'origin/main') de la branche
+    courante, derivee dynamiquement plutot que codée en dur. Repli sur
+    'origin/main' si aucune branche amont n'est configuree (ex. depot neuf)
+    ou si git echoue. Le cache evite de relancer git a chaque refresh."""
+    ref, code = run_git_sync(['rev-parse', '--abbrev-ref', '@{u}'])
+    if code == 0 and ref:
+        return ref
+    return 'origin/main'
 
 
 # =========================================================================
@@ -561,7 +617,7 @@ class DashboardPage(QWidget):
         # Git (synchrone, rapide)
         br, _ = run_git_sync(['rev-parse', '--abbrev-ref', 'HEAD'])
         ab, _ = run_git_sync(['rev-list', '--left-right', '--count',
-                              'origin/main...HEAD'])
+                              f'{upstream_ref()}...HEAD'])
         last, _ = run_git_sync(['log', '-1', '--oneline'])
         ahead = behind = '0'
         if ab:
@@ -585,6 +641,7 @@ class GenererPage(QWidget):
     def __init__(self, runner):
         super().__init__()
         self.runner = runner
+        self.web_view = None
         self._build()
 
     def _build(self):
@@ -621,14 +678,43 @@ class GenererPage(QWidget):
         self.btn_gen = QPushButton("⚙  Generer le site")
         self.btn_gen.setObjectName('primary')
         self.btn_gen.clicked.connect(self.generate)
-        self.btn_preview = QPushButton("👁  Apercu (ouvrir index.html)")
-        self.btn_preview.clicked.connect(self.open_site)
+        self.btn_preview = QPushButton("🔄  Rafraichir l'apercu")
         row.addWidget(self.btn_gen)
         row.addWidget(self.btn_preview)
         row.addStretch(1)
         c.addLayout(row)
 
-        root.addStretch(1)
+        # Aperçu intégré : QWebEngineView si disponible, sinon fallback
+        preview_card = section_card(root, "Apercu du site")
+        if WEBENGINE and QWebEngineView:
+            self.web_view = QWebEngineView()
+            self.web_view.setMinimumHeight(300)
+            preview_card.addWidget(self.web_view)
+            QTimer.singleShot(500, self._load_preview)  # chargement differe
+            self.btn_preview.clicked.connect(self._on_preview_click)
+        else:
+            lbl = QLabel(
+                "Apercu integre indisponible.\n"
+                "Installe le paquet <code>python-pyside6-WebEngine</code> "
+                "(Arch/CachyOS) ou utilise le bouton ci-dessus pour ouvrir "
+                "le site dans le navigateur.")
+            lbl.setTextFormat(Qt.RichText)
+            lbl.setWordWrap(True)
+            lbl.setStyleSheet('color:#a89e8c; padding:30px;')
+            lbl.setAlignment(Qt.AlignCenter)
+            preview_card.addWidget(lbl)
+            self.btn_preview.setText("👁  Ouvrir dans le navigateur")
+            self.btn_preview.clicked.connect(self.open_site)
+
+    def _load_preview(self):
+        if self.web_view and os.path.exists(SITE_OUT):
+            self.web_view.setUrl(QUrl.fromLocalFile(SITE_OUT))
+
+    def _on_preview_click(self):
+        if self.web_view:
+            self._load_preview()
+        else:
+            self.open_site()
 
     def generate(self):
         if not os.path.exists(GEN_SCRIPT):
@@ -636,9 +722,17 @@ class GenererPage(QWidget):
             return
         self.runner.cmd('python3', [GEN_SCRIPT], cwd=KIT_DIR,
                         title="Generation du site")
+        # Recharger l'apercu WebEngine apres generation
+        if self.web_view:
+            self.runner.then(lambda _r: self._load_preview())
         if self.chk_open.isChecked():
             self.runner.then(lambda _r: self._maybe_open())
         self.runner.console.append("Generation lancee.", 'title')
+
+    def refresh(self):
+        """Met a jour l'etat de la page (presence d'index.html)."""
+        if hasattr(self, 'web_view') and self.web_view:
+            self._load_preview()
 
     def _maybe_open(self):
         if os.path.exists(SITE_OUT):
@@ -661,6 +755,8 @@ class VideoPage(QWidget):
         super().__init__()
         self.runner = runner
         self.video_path = None
+        self.thumb_seconds = 1.0      # instant de la vignette, reglable
+        self.video_duration = None    # duree en secondes (via ffprobe)
         self._build()
 
     def _build(self):
@@ -697,6 +793,30 @@ class VideoPage(QWidget):
             'background:#13110e; border-radius:8px; border:1px solid #332d24;'
             ' color:#6b6356;')
         c1.addWidget(self.preview_lbl)
+
+        # Curseur pour choisir l'instant de la vignette
+        seek_row = QHBoxLayout()
+        seek_row.addWidget(label_muted("Instant vignette", min_w=110))
+        self.slider_seek = QSlider(Qt.Horizontal)
+        self.slider_seek.setRange(0, 100)   # en dixiemes de seconde
+        self.slider_seek.setValue(int(self.thumb_seconds * 10))
+        self.slider_seek.setEnabled(False)  # actif une fois une video chargee
+        self.slider_seek.valueChanged.connect(self._on_seek_changed)
+        seek_row.addWidget(self.slider_seek, 1)
+        self.lbl_seek = QLabel("0:01.0")
+        self.lbl_seek.setMinimumWidth(56)
+        self.lbl_seek.setStyleSheet('color:#a89e8c;')
+        seek_row.addWidget(self.lbl_seek)
+        self.btn_refresh_preview = QPushButton("🔄")
+        self.btn_refresh_preview.setToolTip("Rafraichir l'aperçu")
+        self.btn_refresh_preview.setFixedWidth(38)
+        self.btn_refresh_preview.setEnabled(False)
+        self.btn_refresh_preview.clicked.connect(self._refresh_preview)
+        seek_row.addWidget(self.btn_refresh_preview)
+        c1.addLayout(seek_row)
+
+        # Drag & drop accepte sur toute la page
+        self.setAcceptDrops(True)
 
         # 2. Details
         c2 = section_card(root, "2. Details")
@@ -750,16 +870,72 @@ class VideoPage(QWidget):
             "Videos (*.mp4 *.mov *.avi *.mkv);;Tous les fichiers (*)",
             "", QFileDialog.Option.DontUseNativeDialog)
         if path:
-            self.video_path = path
-            self.edit_file.setText(path)
-            self._show_preview(path)
-            self._update_add_state()
+            self._load_video(path)
 
-    def _show_preview(self, path):
-        tmp = os.path.join(tempfile.gettempdir(), '_printnc_preview.jpg')
+    def _load_video(self, path):
+        """Commun a pick_file et au drag & drop : charge la video, detecte sa
+        duree (ffprobe) et genere l'aperçu à l'instant courant."""
+        self.video_path = path
+        self.edit_file.setText(path)
+        # Duree via ffprobe (best-effort : repli sur 10 s si absent/echec)
+        self.video_duration = self._probe_duration(path)
+        duree = self.video_duration if self.video_duration else 10.0
+        self.slider_seek.setRange(0, max(1, int(duree * 10)))
+        self.slider_seek.setValue(int(min(self.thumb_seconds, duree) * 10))
+        self.slider_seek.setEnabled(True)
+        self.btn_refresh_preview.setEnabled(True)
+        self._update_seek_label()
+        self._show_preview(path)
+        self._update_add_state()
+
+    def _probe_duration(self, path):
+        """Retourne la duree de la video en secondes (float) via ffprobe,
+        ou None si ffprobe est absent ou echoue."""
+        if not shutil.which('ffprobe'):
+            return None
+        try:
+            p = subprocess.run(
+                ['ffprobe', '-v', 'error', '-show_entries', 'format=duration',
+                 '-of', 'default=noprint_wrappers=1:nokey=1', path],
+                capture_output=True, text=True, timeout=20)
+            return float(p.stdout.strip())
+        except Exception:
+            return None
+
+    @staticmethod
+    def _fmt_seek(t):
+        """Formate un instant en secondes pour l'affichage et pour ffmpeg."""
+        m, s = divmod(float(t), 60)
+        return f"{int(m)}:{s:04.1f}"
+
+    def _fmt_seek_ffmpeg(self, t):
+        """Formate un instant au format HH:MM:SS.mmm pour l'option -ss."""
+        t = max(0.0, float(t))
+        h = int(t // 3600)
+        m = int((t % 3600) // 60)
+        s = t % 60
+        return f"{h:02d}:{m:02d}:{s:06.3f}"
+
+    def _on_seek_changed(self, _val):
+        self.thumb_seconds = self.slider_seek.value() / 10.0
+        self._update_seek_label()
+
+    def _update_seek_label(self):
+        self.lbl_seek.setText(self._fmt_seek(self.thumb_seconds))
+
+    def _refresh_preview(self):
+        if self.video_path:
+            self._show_preview(self.video_path)
+
+    def _show_preview(self, path, t=None):
+        if t is None:
+            t = self.thumb_seconds
+        fd, tmp = tempfile.mkstemp(suffix='.jpg', prefix='_printnc_preview_')
+        os.close(fd)
         try:
             subprocess.run(
-                ['ffmpeg', '-y', '-loglevel', 'error', '-ss', '00:00:01',
+                ['ffmpeg', '-y', '-loglevel', 'error',
+                 '-ss', self._fmt_seek_ffmpeg(t),
                  '-i', path, '-frames:v', '1', '-vf', 'scale=320:-1',
                  '-q:v', '4', tmp],
                 check=True, capture_output=True, timeout=20)
@@ -771,12 +947,17 @@ class VideoPage(QWidget):
                     return
         except Exception:
             pass
+        finally:
+            if os.path.exists(tmp):
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
         self.preview_lbl.setText("Aperçu indisponible")
 
     def _update_add_state(self):
         ok = bool(self.video_path) and os.path.exists(self.video_path or '')
         self.btn_add.setEnabled(ok and not self.runner.busy)
-        self.btn_pick_disabled = False
 
     def do_add(self):
         if not self.video_path or not os.path.exists(self.video_path):
@@ -796,9 +977,14 @@ class VideoPage(QWidget):
         texte = self.edit_texte.text().strip() or \
             "Etape de construction (video du jour)"
 
-        # Doublon ?
-        if os.path.exists(CSV_PATH) and nom_fichier in open(
-                CSV_PATH, encoding='utf-8').read():
+        # Doublon ? Teste la colonne 'fichier' exacte (pas une sous-chaîne
+        # dans tout le CSV, qui ferait des faux positifs sur les légendes).
+        deja = False
+        if os.path.exists(CSV_PATH):
+            with open(CSV_PATH, encoding='utf-8') as _f:
+                deja = any(r.get('fichier') == nom_fichier
+                           for r in csv.DictReader(_f) if r.get('date'))
+        if deja:
             rep = QMessageBox.question(
                 self, "Doublon potentiel",
                 f"'{nom_fichier}' semble deja present dans le CSV.\n"
@@ -822,13 +1008,15 @@ class VideoPage(QWidget):
                 self.runner.cmd('cp', [self.video_path, dest], cwd=KIT_DIR,
                                 title=f"Archive de {nom_fichier}")
 
-        # 2) miniature a 1 s (si pas deja faite)
+        # 2) miniature a l'instant choisi (si pas deja faite)
         if not os.path.exists(mini):
             self.runner.cmd('ffmpeg',
-                            ['-y', '-loglevel', 'error', '-ss', '00:00:01',
+                            ['-y', '-loglevel', 'error',
+                             '-ss', self._fmt_seek_ffmpeg(self.thumb_seconds),
                              '-i', self.video_path, '-frames:v', '1',
                              '-vf', 'scale=480:-1', '-q:v', '4', mini],
-                            cwd=KIT_DIR, title="Generation de la miniature")
+                            cwd=KIT_DIR,
+                            title=f"Generation de la miniature ({self._fmt_seek(self.thumb_seconds)})")
             # fallback a 0 s si la miniature n'existe toujours pas
             def _fallback(_r, v=self.video_path, m=mini):
                 if not os.path.exists(m):
@@ -858,8 +1046,39 @@ class VideoPage(QWidget):
             self.preview_lbl.setText("Pas d'aperçu")
             self.edit_lien.clear()
             self.edit_texte.clear()
+            self.slider_seek.setEnabled(False)
+            self.btn_refresh_preview.setEnabled(False)
             self._update_add_state()
         self.runner.then(_done, title="Termine")
+
+    # ---- Drag & drop d'un fichier video sur la page ----
+    def dragEnterEvent(self, event: QDragEnterEvent):
+        if event.mimeData().hasUrls() and self._video_urls(event.mimeData()):
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dragMoveEvent(self, event: QDragMoveEvent):
+        if event.mimeData().hasUrls() and self._video_urls(event.mimeData()):
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event: QDropEvent):
+        urls = self._video_urls(event.mimeData())
+        if urls:
+            self._load_video(urls[0].toLocalFile())
+            event.acceptProposedAction()
+        else:
+            event.ignore()
+
+    @staticmethod
+    def _video_urls(mime: QMimeData):
+        """Filtre les URLs du mimeData pour ne garder que les fichiers video."""
+        exts = ('.mp4', '.mov', '.avi', '.mkv')
+        return [u for u in mime.urls()
+                if u.isLocalFile()
+                and os.path.splitext(u.toLocalFile())[1].lower() in exts]
 
 
 # =========================================================================
@@ -959,9 +1178,13 @@ class MiniaturesPage(QWidget):
             self.runner.then(lambda _r: self._refresh_count(),
                              title=f"{n} miniature(s) generee(s)")
 
+    def refresh(self):
+        """Met a jour le compteur de miniatures manquantes."""
+        self._refresh_count()
+
 
 # =========================================================================
-#  PAGE : Git
+#  PAGE : Git — publier
 # =========================================================================
 class GitPage(QWidget):
     def __init__(self, runner):
@@ -1051,7 +1274,7 @@ class GitPage(QWidget):
 
         br, _ = run_git_sync(['rev-parse', '--abbrev-ref', 'HEAD'])
         ab, _ = run_git_sync(['rev-list', '--left-right', '--count',
-                              'origin/main...HEAD'])
+                              f'{upstream_ref()}...HEAD'])
         ahead = behind = '0'
         if ab:
             parts = ab.split()
@@ -1093,6 +1316,116 @@ class GitPage(QWidget):
                         title="git pull --rebase (synchro avant push)",
                         env=env, halt_on_error=True)
         self.runner.cmd('git', ['push'], cwd=KIT_DIR, title="git push", env=env)
+
+
+# =========================================================================
+#  DIALOGUE : Edition / suppression d'une video
+# =========================================================================
+class EditVideoDialog(QDialog):
+    """Dialogue dedie pour modifier ou supprimer une video existante.
+    Pre-rempli avec les champs actuels de la video selectionnee."""
+
+    def __init__(self, parent, video_row):
+        """video_row : dict avec cles date, phase, fichier, lien, texte."""
+        super().__init__(parent)
+        self.setWindowTitle("Modifier la video")
+        self.setMinimumWidth(520)
+        self.video_row = dict(video_row)  # copie
+        self._supprime = False
+
+        layout = QVBoxLayout(self)
+        layout.setSpacing(14)
+
+        # Fichier (lecture seule, indicatif)
+        g = QGridLayout()
+        g.setHorizontalSpacing(12)
+        g.setVerticalSpacing(10)
+        g.addWidget(label_muted("Fichier"), 0, 0)
+        lbl_fic = QLabel(self.video_row.get('fichier', ''))
+        lbl_fic.setStyleSheet('color:#a89e8c;')
+        g.addWidget(lbl_fic, 0, 1)
+
+        # Date
+        g.addWidget(label_muted("Date"), 1, 0)
+        self.date_edit = QDateEdit()
+        self.date_edit.setDisplayFormat('yyyy-MM-dd')
+        self.date_edit.setCalendarPopup(True)
+        d = self.video_row.get('date', '')
+        if d:
+            qdate = QDate.fromString(d, 'yyyy-MM-dd')
+            if qdate.isValid():
+                self.date_edit.setDate(qdate)
+        g.addWidget(self.date_edit, 1, 1)
+
+        # Phase
+        g.addWidget(label_muted("Phase"), 2, 0)
+        self.combo_phase = QComboBox()
+        for label in ('Mecanique', 'Electronique', 'LinuxCNC'):
+            self.combo_phase.addItem(label)
+        phase = self.video_row.get('phase', 'meca')
+        if phase in PHASE_LABEL:
+            self.combo_phase.setCurrentText(PHASE_LABEL[phase])
+        g.addWidget(self.combo_phase, 2, 1)
+
+        # Lien Instagram
+        g.addWidget(label_muted("Lien Instagram"), 3, 0)
+        self.edit_lien = QLineEdit(self.video_row.get('lien', ''))
+        self.edit_lien.setPlaceholderText("https://www.instagram.com/.../reel/.../")
+        g.addWidget(self.edit_lien, 3, 1)
+
+        # Legende
+        g.addWidget(label_muted("Legende"), 4, 0)
+        self.edit_texte = QLineEdit(self.video_row.get('texte', ''))
+        self.edit_texte.setPlaceholderText("Etape de construction (video du jour)")
+        g.addWidget(self.edit_texte, 4, 1)
+
+        layout.addLayout(g)
+        layout.addStretch(1)
+
+        # Boutons
+        bbox = QHBoxLayout()
+        bbox.addStretch(1)
+        self.btn_suppr = QPushButton("🗑  Supprimer cette video")
+        self.btn_suppr.setStyleSheet(
+            'background:#5c2020; color:#ff9999; padding:6px 16px; '
+            'border-radius:6px; font-weight:bold;')
+        self.btn_suppr.clicked.connect(self._on_supprimer)
+        bbox.addWidget(self.btn_suppr)
+
+        self.btn_annuler = QPushButton("Annuler")
+        self.btn_annuler.clicked.connect(self.reject)
+        bbox.addWidget(self.btn_annuler)
+
+        self.btn_valider = QPushButton("✓  Valider")
+        self.btn_valider.setObjectName('primary')
+        self.btn_valider.clicked.connect(self._on_valider)
+        bbox.addWidget(self.btn_valider)
+        layout.addLayout(bbox)
+
+    def _on_supprimer(self):
+        rep = QMessageBox.question(
+            self, "Confirmer la suppression",
+            f"Supprimer la video et ses fichiers associes ?\n\n"
+            f"Fichier : {self.video_row.get('fichier', '')}\n"
+            f"Miniature et archive source seront aussi supprimees si "
+            f"elles existent.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if rep == QMessageBox.Yes:
+            self._supprime = True
+            self.accept()
+
+    def _on_valider(self):
+        self.video_row['date'] = self.date_edit.date().toString('yyyy-MM-dd')
+        self.video_row['phase'] = PHASE_FROM_LABEL[
+            self.combo_phase.currentText()]
+        self.video_row['lien'] = self.edit_lien.text().strip()
+        self.video_row['texte'] = self.edit_texte.text().strip()
+        self._supprime = False
+        self.accept()
+
+    @property
+    def supprime(self):
+        return self._supprime
 
 
 # =========================================================================
@@ -1147,7 +1480,7 @@ class DonneesPage(QWidget):
             c.addLayout(row)
 
         c.addWidget(self._sep())
-        c.addWidget(label_muted("Apercu de videos.csv (lecture seule) :", min_w=0))
+        c.addWidget(label_muted("Apercu de videos.csv :", min_w=0))
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(
             ['Date', 'Phase', 'Fichier', 'Lien', 'Texte'])
@@ -1158,11 +1491,19 @@ class DonneesPage(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.verticalHeader().setVisible(False)
         self.table.setMinimumHeight(220)
+        self.table.doubleClicked.connect(self._edit_selected)
         c.addWidget(self.table)
 
+        # Boutons d'action sur la video selectionnee
         rb = QHBoxLayout()
         rb.addStretch(1)
-        self.btn_regen = QPushButton("⚙  Regenerer le site apres modification")
+        self.btn_edit = QPushButton("✎  Modifier")
+        self.btn_edit.clicked.connect(self._edit_selected)
+        rb.addWidget(self.btn_edit)
+        self.btn_suppr = QPushButton("🗑  Supprimer")
+        self.btn_suppr.clicked.connect(self._delete_selected)
+        rb.addWidget(self.btn_suppr)
+        self.btn_regen = QPushButton("⚙  Regenerer le site")
         self.btn_regen.setObjectName('primary')
         self.btn_regen.clicked.connect(self.regen)
         rb.addWidget(self.btn_regen)
@@ -1199,6 +1540,98 @@ class DonneesPage(QWidget):
                 if j == 1 and val in PHASE_COLORS:
                     item.setForeground(QColor(PHASE_COLORS[val]))
                 self.table.setItem(i, j, item)
+
+    def _selected_video_key(self):
+        """Retourne la cle (date, fichier) de la video selectionnee dans
+        la table, ou None si aucune selection. On identifie par cle plutot
+        que par rang car la table est plafonnee a 200 lignes."""
+        row = self.table.currentRow()
+        if row < 0:
+            return None
+        item_date = self.table.item(row, 0)
+        item_fic = self.table.item(row, 2)
+        if not item_date or not item_fic:
+            return None
+        return (item_date.text(), item_fic.text())
+
+    def _edit_selected(self):
+        key = self._selected_video_key()
+        if not key:
+            QMessageBox.information(self, "Aucune selection",
+                                    "Selectionne une video dans le tableau.")
+            return
+        # Trouver la ligne correspondante dans le CSV complet (pas juste les
+        # 200 premieres affichees)
+        all_vids = lire_videos()
+        video = None
+        for v in all_vids:
+            if v.get('date') == key[0] and v.get('fichier') == key[1]:
+                video = v
+                break
+        if not video:
+            QMessageBox.warning(self, "Video introuvable",
+                                "Impossible de trouver cette video dans le CSV.")
+            return
+        dlg = EditVideoDialog(self, video)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return
+        if dlg.supprime:
+            self._delete_video(video, all_vids)
+        else:
+            # Mettre a jour la ligne dans la liste
+            for v in all_vids:
+                if v.get('date') == key[0] and v.get('fichier') == key[1]:
+                    v.update(dlg.video_row)
+                    break
+            ecrire_videos_csv(all_vids)
+            self.runner.console.append("Video modifiee dans videos.csv", 'title')
+            self.regen()
+
+    def _delete_selected(self):
+        key = self._selected_video_key()
+        if not key:
+            QMessageBox.information(self, "Aucune selection",
+                                    "Selectionne une video dans le tableau.")
+            return
+        all_vids = lire_videos()
+        video = None
+        for v in all_vids:
+            if v.get('date') == key[0] and v.get('fichier') == key[1]:
+                video = v
+                break
+        if not video:
+            return
+        rep = QMessageBox.question(
+            self, "Confirmer la suppression",
+            f"Supprimer la video et ses fichiers associes ?\n\n"
+            f"Fichier : {video.get('fichier', '')}\n"
+            f"Miniature et archive source seront aussi supprimees.",
+            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if rep == QMessageBox.Yes:
+            self._delete_video(video, all_vids)
+
+    def _delete_video(self, video, all_vids):
+        """Supprime une video : ligne CSV + miniature + archive source."""
+        fic = video.get('fichier', '')
+        base = os.path.splitext(fic)[0] if fic else ''
+        # Retirer la ligne du CSV
+        all_vids = [v for v in all_vids
+                     if not (v.get('date') == video.get('date')
+                             and v.get('fichier') == video.get('fichier'))]
+        ecrire_videos_csv(all_vids)
+        self.runner.console.append(f"Video supprimee : {fic}", 'title')
+        # Supprimer la miniature si elle existe
+        mini = os.path.join(MINI_DIR, f'{base}.jpg')
+        if os.path.exists(mini):
+            os.remove(mini)
+            self.runner.console.append(f"Miniature supprimee : {mini}", 'title')
+        # Supprimer l'archive source si elle existe
+        src = os.path.join(SRC_DIR, fic)
+        if os.path.exists(src):
+            os.remove(src)
+            self.runner.console.append(f"Archive source supprimee : {src}", 'title')
+        # Regen + refresh
+        self.regen()
 
 
 # =========================================================================
@@ -1408,10 +1841,14 @@ class MainWindow(QMainWindow):
         page = self.pages[key]
         if key == 'dashboard':
             page.refresh()
+        elif key == 'generer':
+            page.refresh()
         elif key == 'donnees':
             page.refresh_table()
         elif key == 'video':
             page._update_add_state()
+        elif key == 'miniatures':
+            page.refresh()
         elif key == 'git':
             page.refresh()
 
@@ -1422,9 +1859,7 @@ class MainWindow(QMainWindow):
         if 'video' in self.pages:
             self.pages['video']._update_add_state()
         if 'miniatures' in self.pages and self.pages['miniatures']._src_dir:
-            self.pages['miniatures'].btn_gen.setEnabled(
-                not busy and self.pages['miniatures'].btn_gen.isEnabled()
-                or (not busy and bool(self.pages['miniatures']._src_dir)))
+            self.pages['miniatures'].btn_gen.setEnabled(not busy)
 
     def refresh_all(self):
         for key, page in self.pages.items():
