@@ -2955,7 +2955,7 @@ Camera Y = &lt;offset mesuré&gt;</pre>
     <div class="adv-rate" id="advRate">
       <p class="adv-rate__q">Ce contenu vous a-t-il été utile ?</p>
       <button class="adv-rate__btn" id="btn-useful">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4.5C7 4.5 2.73 7.61 1 12l2.89 2.89c.76-.77 1.81-1.25 2.97-1.25 2.34 0 4.24 1.9 4.24 4.24 0 1.17-.48 2.22-1.25 2.97L12 23.5l2.15-2.15c-.77-.75-1.25-1.8-1.25-2.97 0-2.34 1.9-4.24 4.24-4.24 1.16 0 2.21.48 2.97 1.25L23 12c-1.73-4.39-6-7.5-11-7.5z"/></svg>
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4.5C7 4.5 2.73 7.61 1 12l2.89 2.89c.76-.77 1.81-1.25 2.97-1.25 2.34 0 4.24 1.9 4.24 0 1.17-.48 2.22 2.97L12 23.5l2.15-2.15c-.77-.75-1.25-1.8-1.25-2.97 0-2.34 1.9-4.24 4.24-4.24 0-2.34-1.25-2.97-1.25-2.97z"/></svg>
         Utile
       </button>
       <p class="adv-rate__avg" id="advRateAvg"></p>
@@ -3003,7 +3003,7 @@ function switchTab(month) {
     else history.replaceState(null, '', '#' + month);
 }
 
-tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.month)));
+tabs.forEach(t => t.addEventListener('click', => switchTab(t.dataset.month)));
 
 // Filtres phase
 document.querySelectorAll('.pbtn').forEach(btn => {
@@ -3033,10 +3033,26 @@ document.getElementById('search-input').addEventListener('input', filterTimeline
 
 // Copier le lien
 document.getElementById('copy-link-btn').addEventListener('click', () => {
-    navigator.clipboard.writeText(window.location.href);
-    const ok = document.getElementById('copy-ok');
-    ok.classList.add('show');
-    setTimeout(() => ok.classList.remove('show'), 2000);
+    const url = window.location.href;
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(() => {
+            const ok = document.getElementById('copy-ok');
+            ok.classList.add('show');
+            setTimeout(() => ok.classList.remove('show'), 2000);
+        });
+    } else {
+        const ta = document.createElement('textarea');
+        ta.value = url;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        const ok = document.getElementById('copy-ok');
+        ok.classList.add('show');
+        setTimeout(() => ok.classList.remove('show'), 2000);
+    }
 });
 
 // Bouton remonter
@@ -3051,7 +3067,6 @@ document.querySelectorAll('.doc-photo img, .hero-img').forEach(img => {
         document.getElementById('lightbox-caption').innerText = img.alt;
         document.getElementById('lightbox').classList.add('open');
     });
-});
 document.getElementById('lightbox-close').addEventListener('click', () => document.getElementById('lightbox').classList.remove('open'));
 document.getElementById('lightbox').addEventListener('click', (e) => { if (e.target === e.currentTarget) e.currentTarget.classList.remove('open'); });
 
@@ -3069,29 +3084,32 @@ toggle.addEventListener('click', () => {
 const btnUseful = document.getElementById('btn-useful');
 const rateAvg = document.getElementById('advRateAvg');
 if (btnUseful) {
-    // Si le visiteur a déjà voté, on grise le bouton
-    if (localStorage.getItem('site_useful_voted')) {
-        btnUseful.classList.add('is-voted');
-    }
-
+    if (localStorage.getItem('site_useful_voted')) btnUseful.classList.add('is-voted');
     btnUseful.addEventListener('click', function() {
         if (this.classList.contains('is-voted')) return;
-        
-        // 1. Effet visuel pour le visiteur
         this.classList.add('is-voted');
         localStorage.setItem('site_useful_voted', 'true');
         rateAvg.innerHTML = "Merci pour votre retour !";
         
-        // 2. Envoi de l'événement à GoatCounter pour toi
         if (window.goatcounter) {
             window.goatcounter.count({
-                event: true,          // Dit à GoatCounter que c'est un événement, pas une page vue
-                path: '/vote-utile',  // Le nom qui apparaîtra dans tes stats
+                event: true,
+                path: '/vote-utile',
                 title: 'Clic bouton Utile'
             });
         }
     });
 }
+
+// --- Deep linking au chargement ---
+window.addEventListener('load', () => {
+    if (window.location.hash) {
+        const target = window.location.hash.substring(1);
+        if (document.querySelector(`[data-month="${target}"]`)) {
+            switchTab(target);
+        }
+    }
+});
 </script>
 </body>
 </html>
