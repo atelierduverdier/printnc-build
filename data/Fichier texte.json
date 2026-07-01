@@ -1,0 +1,32 @@
+{
+  "2026-01": {
+    "nom": "Janvier 2026",
+    "titre": "Les debuts et le montage a blanc",
+    "desc": "Premieres etapes de construction et essai d'assemblage."
+  },
+  "2026-02": {
+    "nom": "Fevrier 2026",
+    "titre": "La saga de l'axe Z",
+    "desc": "Plaques reimprimees, rajustees, et le cablage de la broche."
+  },
+  "2026-03": {
+    "nom": "Mars 2026",
+    "titre": "Mecanique finalisee, place a l'electrique",
+    "desc": "Montage du portique termine, debut du boitier electrique."
+  },
+  "2026-04": {
+    "nom": "Avril 2026",
+    "titre": "Mise en route... et la carte grillee",
+    "desc": "Premiers mouvements sous LinuxCNC, puis un coup dur."
+  },
+  "2026-05": {
+    "nom": "Mai 2026",
+    "titre": "La renaissance et les reglages fins",
+    "desc": "Nouvelle carte, premiere decoupe, palpeur et precision."
+  },
+  "2026-06": {
+    "nom": "Juin 2026",
+    "titre": "ATC, relais et interface",
+    "desc": "Accessoires, automatismes et personnalisation de QtDragon."
+  }
+}

@@ -361,8 +361,8 @@ def _champ_csv(v):
     return v
 
 
-def _ligne_csv(date, phase, fichier, lien, texte):
-    return ','.join(_champ_csv(x) for x in [date, phase, fichier, lien, texte])
+def _ligne_csv(date, phase, fichier, lien, texte, duree='', jalon=''):
+    return ','.join(_champ_csv(x) for x in [date, phase, fichier, lien, texte, duree, jalon])
 
 
 def ecrire_ligne_csv(date, phase, fichier, lien, texte):
@@ -389,7 +389,7 @@ def ecrire_ligne_csv(date, phase, fichier, lien, texte):
 
 def ecrire_videos_csv(rows):
     """Reecrit tout le CSV videos.csv a partir d'une liste de dicos {date,
-    phase, fichier, lien, texte}. L'ordre des lignes est indifferent car
+    phase, fichier, lien, texte, duree, jalon}. L'ordre des lignes est indifferent car
     generer_site.py retri par date au chargement.
 
     Sauvegarde preventive en .bak : le CSV est l'unique source de donnees,
@@ -398,11 +398,12 @@ def ecrire_videos_csv(rows):
     if os.path.exists(CSV_PATH):
         shutil.copy2(CSV_PATH, CSV_PATH + '.bak')
     with open(CSV_PATH, 'w', encoding='utf-8', newline='') as f:
-        f.write('date,phase,fichier,lien,texte\r\n')
+        f.write('date,phase,fichier,lien,texte,duree,jalon\r\n')
         for r in rows:
             f.write(_ligne_csv(r.get('date', ''), r.get('phase', ''),
                                r.get('fichier', ''), r.get('lien', ''),
-                               r.get('texte', '')) + '\r\n')
+                               r.get('texte', ''), r.get('duree', ''),
+                               r.get('jalon', '')) + '\r\n')
 
 
 def label_muted(text, min_w=110):
