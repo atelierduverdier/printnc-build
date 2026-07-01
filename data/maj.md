@@ -1,3 +1,20 @@
+# 30 juin 2026 — Évolution majeure du site web (Recherche, jalons, glossaire, durées)
+## Recherche en temps réel et Deep Linking
+Ajout d'une barre de recherche sur la timeline. L'input filtre les 246+ vidéos instantanément par titre, légende ou contenu, sans rechargement de page. Ajout du Deep Linking (modification du hash de l'URL via history.replaceState) : cliquer sur un mois ou un onglet met à jour l'URL (ex: #2026-06), ce qui permet de copier/coller un lien direct vers une période spécifique. Au chargement, le script JS vérifie window.location.hash et active l'onglet correspondant. Ajout d'un bouton "Remonter" (back-to-top) flottant en bas à droite, visible après 600 px de scroll.
+
+## Jalons visuels et durées des vidéos
+Deux nouvelles colonnes duree et jalon dans videos.csv. Si jalon est à oui, l'étape apparaît avec un fond orange subtil et une bordure gauche distincte dans la timeline pour mettre en valeur les moments forts (premier montage, premiers copeaux, carte grillée...). Si duree est renseignée (format MM:SS), un badge noir est affiché en bas à droite de la miniature.
+
+Pour éviter de remplir les durées à la main, création du script remplir_durees.py. Il parcourt le CSV, localise chaque vidéo dans videos_sources/, extrait la durée via ffprobe (requête format=duration), et l'inscrit dans le CSV. Il ne réécrit le fichier que si des modifications ont été détectées.
+
+## Glossaire et données externalisées
+Ajout d'un onglet "Glossaire" dans la navigation, généré automatiquement à partir de data/glossaire.md (converti en blocs dépliants <details> comme la documentation). Les titres et descriptions des mois (ex: "La saga de l'axe Z") ont été sortis du code Python de generer_site.py et déplacés dans data/mois.json. L'ajout d'un nouveau mois ou la modification d'un titre ne nécessite plus de toucher au script Python.
+
+## Refonte du système de vote
+Remplacement du système d'étoiles (qui affichait 5/5 par défaut, bloquant l'interaction des visiteurs) par un bouton unique "Utile". Le clic est enregistré comme un événement GoatCounter (path: '/vote-utile') visible dans l'onglet "Events" du tableau de bord. Le bouton se grise localement après le clic (localStorage) pour éviter les doublons.
+
+## Compatibilité gestion_site.py
+Mise à jour des fonctions _ligne_csv et ecrire_videos_csv dans l'interface graphique PySide6 pour prendre en charge les deux nouvelles colonnes sans casser l'ajout de vidéos existant. Le lecteur CSV ignore désormais silencieusement les clés None (piège Python 3.14 avec les virgules en fin de ligne).
 # 28 juin 2026 — Interface graphique de gestion du site (gestion_site.py)
 
 ## Nouvelle interface graphique Qt6
