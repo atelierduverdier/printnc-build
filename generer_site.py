@@ -438,8 +438,8 @@ MODELE = '''<!DOCTYPE html>
   .item.milestone .dot{width:20px;height:20px;left:2px;top:22px;}
   .item.hidden{display:none;}
   .empty{padding:40px 0;color:var(--faint);font-size:15px;text-align:center;display:none;}
-  #recit,#maj,#doc,#gloss{display:none;padding:30px 0 60px;max-width:680px;}
-  #recit.show,#maj.show,#doc.show,#gloss.show{display:block;}
+#accueil, #tl, #recit, #maj, #doc, #gloss { display: none; padding: 30px 0 60px; max-width: 680px; }
+#accueil.show, #tl.show, #recit.show, #maj.show, #doc.show, #gloss.show { display: block; }
   .recit-progress{position:fixed;top:0;left:0;height:3px;background:var(--orange);width:0%;z-index:20;transition:width .1s linear;pointer-events:none;}
   .recit-h{font-size:22px;color:var(--orange);margin:36px 0 14px;font-weight:700;}
   .recit-h:first-child{margin-top:8px;}
@@ -586,7 +586,6 @@ __ONGLETS__
     <div class="search-box" id="search-box" style="display:none;">
       <input type="text" id="search-input" placeholder="Rechercher une étape, un mot-clé...">
     </div>
-    <div class="tabs tabs-mois" id="tabs-mois" style="display:none;"></div>
     <div class="phases-row" id="phases-row" style="display:none;">
       <div class="phases">
       <span class="plabel">Filtre</span>
@@ -645,10 +644,10 @@ __BLOCKS__
 <footer>
   <div class="wrap">
     <div class="adv-rate" id="advRate">
-      <p class="adv-rate__q">Ce contenu vous a-t-il été utile ?</p>
+      <p class="adv-rate__q">Vous construisez (ou envisagez) une PrintNC ?</p>
       <button class="adv-rate__btn" id="btn-useful">
-        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 4.5C7 4.5 2.73 7.61 1 12l2.89 2.89c.76-.77 1.81-1.25 2.97-1.25 2.34 0 4.24 1.9 4.24 4.24 0 1.17-.48 2.22-1.25 2.97L12 23.5l2.15-2.15c-.77-.75-1.25-1.8-1.25-2.97 0-2.34 1.9-4.24 4.24-4.24 1.16 0 2.21.48 2.97 1.25L23 12c-1.73-4.39-6-7.5-11-7.5z"/></svg>
-        Utile
+        <svg viewBox="0 0 24 24" width="18" height="18"><path d="M2 20h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1H2v11zm19.83-7.12c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2 7.59 8.41C7.21 8.79 7 9.3 7 9.83V19c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3-7.12z"/></svg>
+        Oui, je me lance !
       </button>
       <p class="adv-rate__avg" id="advRateAvg"></p>
     </div>
@@ -679,8 +678,8 @@ function switchTab(month) {
     Object.values(sections).forEach(s => s.classList.remove('show'));
     
     const showTl = (month === 'all' || month.startsWith('20'));
-    if (showTl) sections.tl.style.display = '';
-    else sections.tl.style.display = 'none';
+    if (showTl) sections.tl.classList.add('show');
+    else sections.tl.classList.remove('show');
     
     if (sections[month]) sections[month].classList.add('show');
 
@@ -757,33 +756,44 @@ toggle.addEventListener('click', () => {
     localStorage.setItem('theme', document.body.classList.contains('jour') ? 'jour' : 'nuit');
 });
 
-// --- Bouton "Utile" ---
-const btnUseful = document.getElementById('btn-useful');
-const rateAvg = document.getElementById('advRateAvg');
-if (btnUseful) {
-    // Si le visiteur a déjà voté, on grise le bouton
-    if (localStorage.getItem('site_useful_voted')) {
-        btnUseful.classList.add('is-voted');
+// --- Bouton "Je me lance" + compteur GoatCounter ---
+(function() {
+    var btn = document.getElementById('btn-useful');
+    var avg = document.getElementById('advRateAvg');
+    if (!btn || !avg) return;
+
+    function afficherCompteur(n, dejaVote) {
+        if (n > 0) {
+            avg.textContent = n + ' personne' + (n > 1 ? 's se lancent' : ' se lance') + (dejaVote ? ' (dont vous) !' : ' aussi !');
+        } else if (dejaVote) {
+            avg.textContent = 'Vous faites partie des premiers !';
+        }
     }
 
-    btnUseful.addEventListener('click', function() {
-        if (this.classList.contains('is-voted')) return;
-        
-        // 1. Effet visuel pour le visiteur
-        this.classList.add('is-voted');
+    var dejaVote = !!localStorage.getItem('site_useful_voted');
+    if (dejaVote) btn.classList.add('is-voted');
+
+    fetch('https://atelierduverdier.goatcounter.com/counter/%2Fvote-utile.json')
+        .then(function(r) { return r.json(); })
+        .then(function(d) { afficherCompteur(parseInt(d.count, 10) || 0, dejaVote); })
+        .catch(function() {});
+
+    btn.addEventListener('click', function() {
+        if (dejaVote) return;
+        dejaVote = true;
+        btn.classList.add('is-voted');
         localStorage.setItem('site_useful_voted', 'true');
-        rateAvg.innerHTML = "Merci pour votre retour !";
-        
-        // 2. Envoi de l'événement à GoatCounter pour toi
-        if (window.goatcounter) {
-            window.goatcounter.count({
-                event: true,          // Dit à GoatCounter que c'est un événement, pas une page vue
-                path: '/vote-utile',  // Le nom qui apparaîtra dans tes stats
-                title: 'Clic bouton Utile'
-            });
+        avg.textContent = 'Super, bonne construction !';
+        if (window.goatcounter && window.goatcounter.count) {
+            window.goatcounter.count({ event: true, path: '/vote-utile', title: 'Construit une PrintNC' });
         }
     });
-}
+})();
+
+// Initialisation : deep linking et démarrage sur accueil
+const initHash = window.location.hash.slice(1);
+switchTab(initHash || 'accueil');
+window.addEventListener('hashchange', () => switchTab(window.location.hash.slice(1) || 'accueil'));
 </script>
 </body>
 </html>'''
