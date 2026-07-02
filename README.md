@@ -21,10 +21,12 @@ printnc-build/                (depot GitHub, racine = site publie)
     ├── LICENSE                 Licences MIT (code) + CC BY-SA 4.0 (doc)
     ├── LISEZMOI.md             Aide-memoire rapide
     ├── data/
-    │   ├── videos.csv          Liste des videos (date, phase, fichier, lien, texte)
+    │   ├── videos.csv          Liste des videos (date, phase, fichier, lien, texte, duree, jalon)
+    │   ├── mois.json            Titres et descriptions des mois (nom, titre, desc)
     │   ├── maj.md               Changelog technique (onglet "Mises a jour")
     │   ├── doc.md               Documentation de la machine (onglet "Documentation")
-    │   └── recit.md             Texte narratif (onglet "Le recit")
+    │   ├── recit.md             Texte narratif (onglet "Le recit")
+    │   └── glossaire.md         Glossaire (onglet "Glossaire") + reference G-code
     ├── miniatures/              Vignettes .jpg generees (une par video)
     ├── photos/                  Photos (BOM, boitier, etc.)
     └── videos_sources/          Videos .mp4 sources (non versionnees)
@@ -285,41 +287,47 @@ python3 generer_site.py
 
 **Sources lues**
 
-| Fichier           | Role                                              |
-| ----------------- | ------------------------------------------------- |
-| `data/videos.csv` | Une ligne par video (obligatoire)                  |
-| `data/maj.md`     | Changelog affiche dans l'onglet "Mises a jour"     |
-| `data/doc.md`     | Documentation affichee dans l'onglet "Documentation" |
-| `data/recit.html` | Texte narratif affiche dans l'onglet "Le recit"    |
+| Fichier              | Role                                                |
+| -------------------- | --------------------------------------------------- |
+| `data/videos.csv`    | Une ligne par video (obligatoire)                   |
+| `data/mois.json`     | Titres et descriptions des mois (optionnel)         |
+| `data/maj.md`        | Changelog affiche dans l'onglet "Mises a jour"      |
+| `data/doc.md`        | Documentation affichee dans l'onglet "Documentation"|
+| `data/recit.md`      | Texte narratif affiche dans l'onglet "Le recit"     |
+| `data/glossaire.md`  | Glossaire affiche dans l'onglet "Glossaire"         |
 
 **Format de `data/videos.csv`**
 
 ```
-date,phase,fichier,lien,texte
-2026-01-16,meca,17867331942452959.mp4,https://www.instagram.com/.../reel/DTkQUOqiPvb/,Description de l'etape
+date,phase,fichier,lien,texte,duree,jalon
+2026-01-16,meca,17867331942452959.mp4,https://www.instagram.com/.../reel/DTkQUOqiPvb/,Description de l'etape,01:34,
 ```
 
-| Colonne   | Valeurs possibles                                            |
-| --------- | -------------------------------------------------------------|
-| `date`    | `AAAA-MM-JJ` (toujours avec les zeros, ex: `09` pas `9`)     |
-| `phase`   | `meca` · `elec` · `soft`                                     |
-| `fichier` | nom du `.mp4` (doit avoir une miniature dans `miniatures/`)  |
-| `lien`    | URL publique du reel Instagram                               |
-| `texte`   | legende affichee dans la timeline                            |
+| Colonne   | Valeurs possibles                                                   |
+| --------- | --------------------------------------------------------------------|
+| `date`    | `AAAA-MM-JJ` (toujours avec les zeros, ex: `09` pas `9`)           |
+| `phase`   | `meca` · `elec` · `soft`                                            |
+| `fichier` | nom du `.mp4` (doit avoir une miniature dans `miniatures/`)         |
+| `lien`    | URL publique du reel Instagram                                      |
+| `texte`   | legende affichee dans la timeline                                   |
+| `duree`   | duree de la video au format `MM:SS` — badge affiche sur la miniature (optionnel) |
+| `jalon`   | `oui` pour mettre en evidence une etape cle (fond orange, bordure)  |
 
 > Avec `ajouter_video.sh`, le format de la date et l'absence de doublon
 > sont verifies automatiquement. En cas d'edition manuelle du CSV, veiller
 > a garder le zero initial (`2026-06-09`, pas `2026-6-9`) pour que le tri
-> chronologique reste correct.
+> chronologique reste correct. Les colonnes `duree` et `jalon` peuvent
+> etre laissees vides.
 
 **Ajouter un nouveau mois**
 
-Le script cree automatiquement l'onglet du mois. Pour lui donner un titre et
-une description, ajouter une entree dans le dictionnaire `mois_info` en haut
-du script :
+Le script cree automatiquement l'onglet du mois. Pour lui donner un titre
+et une description, editer `data/mois.json` :
 
-```python
-'2026-07': {'nom': 'Juillet 2026', 'titre': 'Mon titre', 'desc': 'Ma description.'},
+```json
+{
+  "2026-07": { "nom": "Juillet 2026", "titre": "Mon titre", "desc": "Ma description." }
+}
 ```
 
 ---

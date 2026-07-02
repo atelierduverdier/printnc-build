@@ -55,29 +55,38 @@ regenere le site automatiquement.
 
 | Fichier | Onglet du site | Format |
 | --- | --- | --- |
-| `data/videos.csv` | Timeline | CSV (date, phase, fichier, lien, texte) |
+| `data/videos.csv` | Timeline | CSV (date, phase, fichier, lien, texte, duree, jalon) |
 | `data/recit.md` | Le recit | Markdown |
 | `data/maj.md` | Mises a jour | Markdown |
 | `data/doc.md` | Documentation | Markdown |
+| `data/glossaire.md` | Glossaire | Markdown (memes regles que doc.md) |
+| `data/mois.json` | Titres des mois | JSON |
 
 Edite les fichiers dans ton editeur prefere, puis regenere le site.
 
 ### Ajouter un nouveau mois dans videos.csv
 
 Si tu ajoutes des videos d'un mois qui n'existe pas encore, l'onglet est
-cree automatiquement. Pour lui donner un beau titre, ouvre `generer_site.py`
-et ajoute une ligne dans le dictionnaire `mois_info` (suivre le modele des
-mois existants). Sinon, l'onglet apparait avec le nom du mois.
+cree automatiquement. Pour lui donner un titre et une description, editer
+`data/mois.json` (pas besoin de toucher au script Python) :
+
+```json
+{
+  "2026-07": { "nom": "Juillet 2026", "titre": "Mon titre", "desc": "Ma description." }
+}
+```
 
 ### Colonnes du CSV videos.csv
 
-    date,phase,fichier,lien,texte
+    date,phase,fichier,lien,texte,duree,jalon
 
 - `date`   : AAAA-MM-JJ (ex: 2026-07-15)
 - `phase`  : `meca`, `elec` ou `soft`
 - `fichier`: nom du .mp4 (ex: 18012345678901234.mp4)
 - `lien`   : URL Instagram du reel
 - `texte`  : legende affichee dans la timeline
+- `duree`  : duree de la video au format MM:SS — badge sur la miniature (optionnel)
+- `jalon`  : `oui` pour mettre en evidence une etape cle (optionnel)
 
 ## Generer les miniatures
 

@@ -1,3 +1,41 @@
+# 2 juillet 2026 — Corrections, liens de partage, vote et glossaire
+
+## Corrections de bugs dans generer_site.py
+
+Trois bugs bloquants corrigés dans le script de génération :
+
+**Page d'accueil invisible au démarrage** : toutes les sections (`#accueil`, `#tl`, etc.) sont masquées par défaut en CSS. La fonction `switchTab` n'était jamais appelée au chargement, donc rien ne s'affichait. Ajout de `switchTab(initHash || 'accueil')` à la fin du script, avec gestion du hash d'URL pour le deep linking.
+
+**Timeline qui ne s'affichait pas** : `switchTab` utilisait `sections.tl.style.display = ''` pour afficher la timeline, mais le CSS définit `#tl { display: none }` — retirer le style inline laissait le CSS reprendre le dessus. Corrigé en utilisant `classList.add('show')` / `classList.remove('show')` comme pour les autres sections.
+
+**Liens de partage non fonctionnels** : découle du bug précédent — ouvrir une URL avec un hash (`#all`, `#2026-06`) n'activait aucun onglet car `switchTab` n'était pas appelée au chargement. Résolu par l'initialisation au démarrage et un listener `hashchange`.
+
+**Bonus** : suppression d'un `<div id="tabs-mois">` vide généré en doublon dans le HTML (vestige du template).
+
+## Liens de partage par ancre (🔗)
+
+Ajout de boutons de partage discrets sur l'ensemble du site, visibles au survol :
+
+- **Chaque étape vidéo** reçoit un identifiant unique (`id="v-nomfichier"`) et un bouton 🔗 dans la ligne de méta-données.
+- **Chaque en-tête de mois** dispose d'un bouton 🔗 pour partager directement une période.
+- **Chaque section de documentation et de glossaire** reçoit un identifiant slugifié (`id="doc-lubrification"` etc.) et un bouton 🔗 positionné dans l'accordéon.
+
+Un clic copie l'URL directe dans le presse-papier et affiche un toast "Lien copié !". Au chargement, le script détecte le hash et navigue automatiquement : `#v-nomfichier` ouvre la timeline et scrolle vers l'étape, `#doc-nom-section` ouvre l'onglet Documentation et déplie la section concernée.
+
+## Widget vote repensé
+
+**Nouvelle question** : "Vous construisez (ou envisagez) une PrintNC ?" avec bouton "Oui, je me lance !" au lieu de "Ce contenu vous a-t-il été utile ?" / "Utile". La question mesure l'intention plutôt que la satisfaction — plus engageante et plus informative.
+
+**Compteur affiché** : au chargement, le widget lit le compteur GoatCounter via l'API publique `/counter/%2Fvote-utile.json` et affiche le nombre de votants ("42 personnes se lancent aussi !"). Les messages s'adaptent selon le contexte : déjà voté, premier votant, juste après le clic. Aucun backend supplémentaire requis.
+
+## Glossaire complété
+
+**Correction d'un bug** : `data/glossaire.md` était enveloppé dans des balises ` ```markdown ` ... ` ``` `, ce qui affichait tout le contenu comme un bloc de code brut. Suppression des balises parasites.
+
+**Nouveaux termes** : environ 20 entrées ajoutées (Backlash, BF12/BK12, Boucle fermée, CL57T, Encodeur, ER20, FreeCAD, G54/WCS, GrblHAL, HGR20/HGW20CC, LinuxCNC, MDI, Modbus RTU, Portique, PPR/CPR, PrintNC, Rail linéaire, Remora, SFU1204/SFU1610, SPI, Surfaçage, Touch off, Vis à billes) en plus des 22 existantes.
+
+**Nouvelle section G-code** : référence complète en français — déplacements (G0/G1/G2/G3), espaces de travail (G54–G59/G53), positionnement (G90/G91), broche (M3/M4/M5), changement d'outil (M6), refroidissement (M7/M8/M9), cycles de perçage (G81/G83/G80), offsets outil (G43/G49), pause et fin (M0/M2/M30), temporisation (G4). Tableau de 29 codes + deux exemples complets commentés (contour sur bois, perçage alu avec débourrage).
+
 # 30 juin 2026 — Évolution majeure du site web (Recherche, jalons, glossaire, durées)
 ## Recherche en temps réel et Deep Linking
 Ajout d'une barre de recherche sur la timeline. L'input filtre les 246+ vidéos instantanément par titre, légende ou contenu, sans rechargement de page. Ajout du Deep Linking (modification du hash de l'URL via history.replaceState) : cliquer sur un mois ou un onglet met à jour l'URL (ex: #2026-06), ce qui permet de copier/coller un lien direct vers une période spécifique. Au chargement, le script JS vérifie window.location.hash et active l'onglet correspondant. Ajout d'un bouton "Remonter" (back-to-top) flottant en bas à droite, visible après 600 px de scroll.
