@@ -365,11 +365,11 @@ def _ligne_csv(date, phase, fichier, lien, texte, duree='', jalon=''):
     return ','.join(_champ_csv(x) for x in [date, phase, fichier, lien, texte, duree, jalon])
 
 
-def ecrire_ligne_csv(date, phase, fichier, lien, texte):
+def ecrire_ligne_csv(date, phase, fichier, lien, texte, duree='', jalon=''):
     """Ajoute une ligne au CSV en respectant le format CRLF d'origine et
     l'echappement RFC 4180 (guillemets doubles)."""
     os.makedirs(os.path.dirname(CSV_PATH), exist_ok=True)
-    ligne = _ligne_csv(date, phase, fichier, lien, texte)
+    ligne = _ligne_csv(date, phase, fichier, lien, texte, duree, jalon)
     # Garantit un CRLF avant la nouvelle ligne si le fichier existe deja et
     # ne se termine pas par un saut de ligne (lecture simple, sans rouvrir
     # le fichier en ecriture simultanement).
@@ -851,6 +851,9 @@ class VideoPage(QWidget):
         self.chk_archive.setChecked(True)
         c2.addWidget(self.chk_archive)
 
+        self.chk_jalon = QCheckBox("Marquer comme jalon (etape cle — mise en evidence dans la timeline)")
+        c2.addWidget(self.chk_jalon)
+
         # 3. Action
         c3 = section_card(root, "3. Ajouter")
         self.lbl_status = QLabel("")
@@ -977,6 +980,11 @@ class VideoPage(QWidget):
         lien = self.edit_lien.text().strip()
         texte = self.edit_texte.text().strip() or \
             "Etape de construction (video du jour)"
+        jalon = 'oui' if self.chk_jalon.isChecked() else ''
+        duree = ''
+        if self.video_duration:
+            m, s = divmod(int(self.video_duration), 60)
+            duree = f'{m:02d}:{s:02d}'
 
         # Doublon ? Teste la colonne 'fichier' exacte (pas une sous-chaîne
         # dans tout le CSV, qui ferait des faux positifs sur les légendes).
@@ -1030,7 +1038,7 @@ class VideoPage(QWidget):
 
         # 3) ajout de la ligne CSV (callback Python, avant la regen)
         def _add_csv(_r):
-            ecrire_ligne_csv(date, phase, nom_fichier, lien, texte)
+            ecrire_ligne_csv(date, phase, nom_fichier, lien, texte, duree, jalon)
             _r.console.append(f"Ligne ajoutee dans {CSV_REL}", 'title')
         self.runner.then(_add_csv, title="Ajout dans videos.csv")
 
@@ -1047,6 +1055,7 @@ class VideoPage(QWidget):
             self.preview_lbl.setText("Pas d'aperçu")
             self.edit_lien.clear()
             self.edit_texte.clear()
+            self.chk_jalon.setChecked(False)
             self.slider_seek.setEnabled(False)
             self.btn_refresh_preview.setEnabled(False)
             self._update_add_state()
