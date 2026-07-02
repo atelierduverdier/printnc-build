@@ -707,12 +707,24 @@ __BLOCKS__
       <p class="adv-rate__avg" id="advRateAvg"></p>
     </div>
     <div class="social">
-      <a href="https://www.instagram.com/atelierduverdier/" target="_blank" rel="noopener" title="Instagram">Instagram</a>
-      <a href="https://www.facebook.com/profile.php?id=61569899877112" target="_blank" rel="noopener" title="Facebook">Facebook</a>
+      <a href="https://www.instagram.com/atelierduverdier/" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M12 2.2c3.2 0 3.6 0 4.9.07 1.2.05 1.8.25 2.2.42.6.22 1 .48 1.4.9.42.4.68.8.9 1.4.17.4.37 1 .42 2.2.06 1.3.07 1.7.07 4.9s0 3.6-.07 4.9c-.05 1.2-.25 1.8-.42 2.2-.22.6-.48 1-.9 1.4-.4.42-.8.68-1.4.9-.4.17-1 .37-2.2.42-1.3.06-1.7.07-4.9.07s-3.6 0-4.9-.07c-1.2-.05-1.8-.25-2.2-.42-.6-.22-1-.48-1.4-.9-.42-.4-.68-.8-.9-1.4-.17-.4-.37-1-.42-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.07-4.9c.05-1.2.25-1.8.42-2.2.22-.6.48-1 .9-1.4.4-.42.8-.68 1.4-.9.4-.17 1-.37 2.2-.42C8.4 2.2 8.8 2.2 12 2.2m0-2.2C8.7 0 8.3 0 7 .07 5.7.13 4.8.33 4.1.6c-.8.3-1.4.7-2.1 1.4C1.3 2.7.9 3.3.6 4.1.33 4.8.13 5.7.07 7 0 8.3 0 8.7 0 12s0 3.7.07 5c.06 1.3.26 2.2.53 2.9.3.8.7 1.4 1.4 2.1.7.7 1.3 1.1 2.1 1.4.7.27 1.6.47 2.9.53C8.3 24 8.7 24 12 24s3.7 0 5-.07c1.3-.06 2.2-.26 2.9-.53.8-.3 1.4-.7 2.1-1.4.7-.7 1.1-1.3 1.4-2.1.27-.7.47-1.6.53-2.9.07-1.3.07-1.7.07-5s0-3.7-.07-5c-.06-1.3-.26-2.2-.53-2.9-.3-.8-.7-1.4-1.4-2.1-.7-.7-1.3-1.1-2.1-1.4-.7-.27-1.6-.47-2.9-.53C15.7 0 15.3 0 12 0z"/><path fill="currentColor" d="M12 5.8a6.2 6.2 0 100 12.4 6.2 6.2 0 000-12.4zm0 10.2a4 4 0 110-8 4 4 0 010 8z"/><circle fill="currentColor" cx="18.4" cy="5.6" r="1.44"/></svg>
+      </a>
+      <a href="https://www.facebook.com/profile.php?id=61569899877112" target="_blank" rel="noopener" title="Facebook" aria-label="Facebook">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M24 12a12 12 0 10-13.9 11.9v-8.4H7.1V12h3V9.4c0-3 1.8-4.6 4.5-4.6 1.3 0 2.7.23 2.7.23v2.9h-1.5c-1.5 0-1.9.92-1.9 1.86V12h3.3l-.53 3.5h-2.8v8.4A12 12 0 0024 12z"/></svg>
+      </a>
+      <a href="https://www.youtube.com/@atelierduverdier" target="_blank" rel="noopener" title="YouTube" aria-label="YouTube">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 00.5 6.2 31 31 0 000 12a31 31 0 00.5 5.8 3 3 0 002.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 002.1-2.1A31 31 0 0024 12a31 31 0 00-.5-5.8zM9.6 15.6V8.4l6.2 3.6-6.2 3.6z"/></svg>
+      </a>
+      <a href="https://ko-fi.com/atelierduverdier" target="_blank" rel="noopener" title="Soutenir l'atelier sur Ko-fi" aria-label="Ko-fi">
+        <svg viewBox="0 0 24 24" width="24" height="24"><path fill="currentColor" d="M5 3h13a3 3 0 0 1 3 3v1a4 4 0 0 1-4 4h-1.1A5 5 0 0 1 11 15H8a5 5 0 0 1-5-5V5a2 2 0 0 1 2-2zm12 6a2 2 0 0 0 2-2V6a1 1 0 0 0-1-1h-1v4zM4 19h14a1 1 0 0 1 0 2H4a1 1 0 0 1 0-2z"/></svg>
+      </a>
     </div>
-    <p class="footer-text">Atelier du Verdier &mdash; Contenu sous licence <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p>
+    <p class="footer-text">Atelier du Verdier &middot; PrintNC build log &middot; <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a></p>
     <div class="footer-counter" hidden id="footer-counter">
-      <span id="compteur-visites">0</span> visites depuis le d&eacute;but &mdash; <a href="https://www.goatcounter.com" target="_blank" rel="noopener">Statistiques respectueuses de la vie priv&eacute;e</a>
+      <a href="https://atelierduverdier.goatcounter.com" target="_blank" rel="noopener" title="Statistiques de visite">
+        <span id="compteur-visites">0</span> visites
+      </a>
     </div>
   </div>
 </footer>
