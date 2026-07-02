@@ -48,6 +48,18 @@ def esc(t):
     return t.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
 
 
+def slugify(s):
+    import unicodedata
+    s = unicodedata.normalize('NFD', s)
+    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')
+    s = s.lower()
+    s = re.sub(r'[^a-z0-9]+', '-', s)
+    return s.strip('-')[:50]
+
+
+SHARE_SVG = '<svg viewBox="0 0 24 24" width="13" height="13"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>'
+
+
 def markdown_vers_html_recit(md):
     import re as _re
     out = []
@@ -125,16 +137,24 @@ def markdown_vers_html_doc(md):
     import re as _re
     sections = _re.split(r'\n(?=# )', '\n' + md)
     out = []
+    slug_counts = {}
     for section in sections:
         if not section.strip(): continue
         lignes = section.split('\n')
-        titre, contenu_lignes = '', []
+        titre_raw, titre, contenu_lignes = '', '', []
         for ln in lignes:
-            if ln.startswith('# ') and not titre: titre = esc(ln[2:].strip())
-            else: contenu_lignes.append(ln)
+            if ln.startswith('# ') and not titre_raw:
+                titre_raw = ln[2:].strip()
+                titre = esc(titre_raw)
+            else:
+                contenu_lignes.append(ln)
         contenu_html = _convertir_contenu_doc('\n'.join(contenu_lignes))
-        if titre:
-            out.append(f'<details class="doc-section"><summary class="doc-section-titre">{titre}</summary><div class="doc-section-corps">{contenu_html}</div></details>')
+        if titre_raw:
+            base_slug = 'doc-' + slugify(titre_raw)
+            slug_counts[base_slug] = slug_counts.get(base_slug, 0) + 1
+            slug = base_slug if slug_counts[base_slug] == 1 else f'{base_slug}-{slug_counts[base_slug]}'
+            share = f'<button class="share-btn" onclick="copyAnchor(\'{slug}\')" title="Copier le lien">{SHARE_SVG}</button>'
+            out.append(f'<details class="doc-section" id="{slug}"><summary class="doc-section-titre">{titre}{share}</summary><div class="doc-section-corps">{contenu_html}</div></details>')
         else:
             out.append(contenu_html)
     return '\n'.join(out)
@@ -254,26 +274,35 @@ def construire():
     # --- GENERATION DES BLOCS TIMELINE ---
     blocks = []
     cur = None
+    date_count = {}
     for j in jalons:
         m = j['date'][:7]
         if m != cur:
             cur = m
             nom_defaut = f"{mois_onglet.get(m[5:7], m)} {m[:4]}"
             mi = mois_info.get(m, {'nom': nom_defaut, 'titre': '', 'desc': ''})
+            share_mois = f'<button class="share-btn" onclick="copyAnchor(\'{m}\')" title="Copier le lien vers ce mois">{SHARE_SVG}</button>'
             blocks.append(f'''    <section class="month" data-month="{m}">
       <div class="mhead">
-        <div class="mnom">{mi.get('nom', nom_defaut)}</div>
+        <div class="mnom">{mi.get('nom', nom_defaut)}{share_mois}</div>
         <h2 class="mtitre">{mi.get('titre', '')}</h2>
         <p class="mdesc">{mi.get('desc', '')} <span class="mcount">{counts[m]} etapes</span></p>
       </div>
     </section>''')
-            
+
         pi = phase_info.get(j['phase'], phase_info['meca'])
         lien = j.get('lien', '').strip()
         fnoext = j['fichier'].replace('.mp4', '') if j.get('fichier') else ''
         duree = j.get('duree', '').strip()
         is_jalon = j.get('jalon', '').strip().lower() in ('oui', '1', 'true')
-        
+
+        if fnoext:
+            article_id = f'v-{fnoext}'
+        else:
+            date_count[j['date']] = date_count.get(j['date'], 0) + 1
+            article_id = f'v-{j["date"]}-{date_count[j["date"]]}'
+        share_vid = f'<button class="share-btn" onclick="copyAnchor(\'{article_id}\')" title="Copier le lien vers cette étape">{SHARE_SVG}</button>'
+
         vid = ''
         if lien and fnoext:
             duree_badge = f'<span class="vid-duration">{esc(duree)}</span>' if duree else ''
@@ -284,17 +313,17 @@ def construire():
                    f'<span class="overlay"><span class="play">&#9654;</span></span></a>')
         elif lien:
             vid = f'<a class="vid" href="{lien}" target="_blank" rel="noopener"><span class="play">&#9654;</span> Voir la video</a>'
-            
+
         texte = j.get('texte', '') or 'Etape de construction (video du jour)'
         texte = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', r'<a href="\2" target="_blank" rel="noopener">\1</a>', texte)
         texte = re.sub(r'(?<!["\'>])(https?://[^\s<]+)', r'<a href="\1" target="_blank" rel="noopener">\1</a>', texte)
-        
+
         class_item = 'item milestone' if is_jalon else 'item'
-        
-        blocks.append(f'''    <article class="{class_item}" data-phase="{j['phase']}" data-month="{m}">
+
+        blocks.append(f'''    <article class="{class_item}" id="{article_id}" data-phase="{j['phase']}" data-month="{m}">
       <div class="dot" style="background:{pi['color']}"></div>
       <div class="content">
-        <div class="meta"><span class="date">{date_fr(j['date'])}</span><span class="tag" style="background:{pi['bg']};color:{pi['color']}">{pi['label']}</span></div>
+        <div class="meta"><span class="date">{date_fr(j['date'])}</span><span class="tag" style="background:{pi['bg']};color:{pi['color']}">{pi['label']}</span>{share_vid}</div>
         <p class="text">{texte}</p>
         {vid}
       </div>
@@ -562,6 +591,16 @@ MODELE = '''<!DOCTYPE html>
   }
   @media(max-width:600px){.theme-toggle{right:90px;}.github-ribbon{width:100px;height:100px;}.github-ribbon a{font-size:10px;width:150px;right:-40px;top:24px;}}
   @media (prefers-reduced-motion:reduce){.adv-rate__btn{transition:none;}.adv-rate__btn:hover{transform:none;}}
+  .share-btn{background:none;border:none;color:var(--faint);cursor:pointer;padding:0 4px;display:inline-flex;align-items:center;transition:.15s;flex-shrink:0;vertical-align:middle;line-height:1;}
+  .share-btn:hover{color:var(--orange);}
+  .share-btn svg{fill:currentColor;display:block;}
+  .item .share-btn,.mnom .share-btn{opacity:0;}
+  .item:hover .share-btn,.mnom:hover .share-btn{opacity:1;}
+  .doc-section{position:relative;}
+  .doc-section .share-btn{position:absolute;top:13px;right:46px;opacity:0;}
+  .doc-section:hover .share-btn{opacity:1;}
+  #share-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--orange);color:#13110e;padding:8px 18px;border-radius:8px;font-size:13px;font-weight:600;z-index:200;opacity:0;transition:.2s;pointer-events:none;}
+  #share-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
 <body>
@@ -790,10 +829,50 @@ toggle.addEventListener('click', () => {
     });
 })();
 
-// Initialisation : deep linking et démarrage sur accueil
-const initHash = window.location.hash.slice(1);
-switchTab(initHash || 'accueil');
-window.addEventListener('hashchange', () => switchTab(window.location.hash.slice(1) || 'accueil'));
+// Partage par ancre
+function copyAnchor(id) {
+    var url = location.origin + location.pathname + '#' + id;
+    var ok = function() { showToastOk(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(ok).catch(ok);
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = url; ta.style.cssText = 'position:fixed;opacity:0;';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch(e) {}
+        document.body.removeChild(ta); ok();
+    }
+}
+function showToastOk() {
+    var t = document.getElementById('share-toast');
+    if (!t) { t = document.createElement('div'); t.id = 'share-toast'; document.body.appendChild(t); }
+    t.textContent = 'Lien copié !';
+    t.classList.add('show');
+    clearTimeout(t._tid);
+    t._tid = setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+// Initialisation : deep linking
+function initFromHash(hash) {
+    if (!hash) { switchTab('accueil'); return; }
+    if (hash.startsWith('v-')) {
+        switchTab('all');
+        setTimeout(function() {
+            var el = document.getElementById(hash);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 200);
+    } else if (hash.startsWith('doc-')) {
+        switchTab('doc');
+        setTimeout(function() {
+            var el = document.getElementById(hash);
+            if (el) { el.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+        }, 200);
+    } else {
+        switchTab(hash);
+    }
+}
+initFromHash(location.hash.slice(1));
+window.addEventListener('hashchange', function() { initFromHash(location.hash.slice(1)); });
 </script>
 </body>
 </html>'''
