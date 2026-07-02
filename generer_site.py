@@ -15,6 +15,9 @@ from collections import Counter
 
 CSV = os.path.join('data', 'videos.csv')
 SORTIE = 'index.html'
+DATE_DEBUT = '2026-01-16'       # date du premier montage
+DATE_NAISSANCE = '2026-06-29'   # date du dernier copeau — stat "age de la machine"
+DUREE_CONSTRUCTION = 6          # mois de construction — stat fixe
 
 phase_info = {
     'meca': {'label': 'Mecanique',    'color': '#378ADD', 'bg': 'rgba(55,138,221,.12)'},
@@ -355,8 +358,17 @@ def construire():
     html = html.replace('__MAJ__', maj_html)
     html = html.replace('__DOC__', doc_html)
     html = html.replace('__GLOSS__', gloss_html)
+    _mois_fr = ['', 'jan.', 'fév.', 'mars', 'avr.', 'mai', 'juin',
+                'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.']
+    _d = DATE_DEBUT.split('-')
+    date_debut_fr = f"{int(_d[2])} {_mois_fr[int(_d[1])]} {_d[0]}"
+    _f = DATE_NAISSANCE.split('-')
+    date_fin_fr = f"{int(_f[2])} {_mois_fr[int(_f[1])]} {_f[0]}"
     html = html.replace('__N__', str(n))
-    html = html.replace('__NB_MOIS__', str(nb_mois))
+    html = html.replace('__DUREE_CONSTRUCTION__', str(DUREE_CONSTRUCTION))
+    html = html.replace('__DATE_DEBUT_FR__', date_debut_fr)
+    html = html.replace('__DATE_FIN_FR__', date_fin_fr)
+    html = html.replace('__DATE_NAISSANCE__', DATE_NAISSANCE)
     open(SORTIE, 'w', encoding='utf-8').write(html)
     print(f"Site genere : {SORTIE} ({n} etapes, {nb_mois} mois)")
 
@@ -405,6 +417,8 @@ MODELE = '''<!DOCTYPE html>
   .sub{font-size:18px;color:var(--muted);max-width:560px;}
   .stats{display:flex;gap:40px;margin-top:36px;flex-wrap:wrap;}
   .stat .n{font-size:32px;font-weight:700;}
+  .stat-dates{display:flex;flex-direction:column;gap:2px;font-size:15px;font-weight:700;line-height:1.3;}
+  .stat-dates-sep{font-size:11px;color:var(--faint);font-weight:400;}
   .stat .l{font-size:13px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;}
   .stat-hero .n{color:var(--orange);}
   .stat-hero .l{text-transform:none;letter-spacing:0;color:var(--muted);font-size:14px;font-style:italic;}
@@ -612,8 +626,10 @@ MODELE = '''<!DOCTYPE html>
     <h1>Journal de construction</h1>
     <p class="sub">L'histoire complète d'une fraiseuse CNC construite de zero, du premier montage à blanc jusqu'à la machine pleinement fonctionnelle.</p>
     <div class="stats">
-      <div class="stat stat-hero"><div class="n">__NB_MOIS__ mois</div><div class="l">de patience, d'essais et de copeaux</div></div>
+      <div class="stat stat-hero"><div class="n">__DUREE_CONSTRUCTION__ mois</div><div class="l">de patience, d'essais et de copeaux</div></div>
       <div class="stat"><div class="n">__N__</div><div class="l">etapes video</div></div>
+      <div class="stat"><div class="stat-dates"><span>__DATE_DEBUT_FR__</span><span class="stat-dates-sep">→</span><span>__DATE_FIN_FR__</span></div><div class="l">construction</div></div>
+      <div class="stat"><div class="n" id="machine-age">—</div><div class="l">depuis le premier copeau</div></div>
     </div>
   </div>
 </header>
@@ -853,6 +869,24 @@ function showToastOk() {
 }
 
 // Initialisation : deep linking
+(function() {
+    var naissance = new Date('__DATE_NAISSANCE__');
+    var now = new Date();
+    var mois = (now.getFullYear() - naissance.getFullYear()) * 12 + (now.getMonth() - naissance.getMonth());
+    var jours = Math.floor((now - naissance) / 86400000);
+    var label;
+    if (jours < 30) {
+        label = jours + (jours <= 1 ? ' jour' : ' jours');
+    } else if (mois < 24) {
+        label = mois + ' mois';
+    } else {
+        var ans = Math.floor(mois / 12);
+        var rm = mois % 12;
+        label = ans + (ans === 1 ? ' an' : ' ans') + (rm ? ' et ' + rm + ' mois' : '');
+    }
+    var el = document.getElementById('machine-age');
+    if (el) el.textContent = label;
+})();
 function initFromHash(hash) {
     if (!hash) { switchTab('accueil'); return; }
     if (hash.startsWith('v-')) {
