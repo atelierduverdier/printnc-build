@@ -133,7 +133,7 @@ def markdown_vers_html(md):
     return '\n'.join(out)
 
 
-def markdown_vers_html_doc(md):
+def markdown_vers_html_doc(md, prefix='doc'):
     import re as _re
     sections = _re.split(r'\n(?=# )', '\n' + md)
     out = []
@@ -150,7 +150,7 @@ def markdown_vers_html_doc(md):
                 contenu_lignes.append(ln)
         contenu_html = _convertir_contenu_doc('\n'.join(contenu_lignes))
         if titre_raw:
-            base_slug = 'doc-' + slugify(titre_raw)
+            base_slug = prefix + '-' + slugify(titre_raw)
             slug_counts[base_slug] = slug_counts.get(base_slug, 0) + 1
             slug = base_slug if slug_counts[base_slug] == 1 else f'{base_slug}-{slug_counts[base_slug]}'
             share = f'<button class="share-btn" onclick="copyAnchor(\'{slug}\')" title="Copier le lien">{SHARE_SVG}</button>'
@@ -346,7 +346,7 @@ def construire():
 
     gloss_html = ''
     gp_md = os.path.join('data', 'glossaire.md')
-    if os.path.exists(gp_md): gloss_html = markdown_vers_html_doc(open(gp_md, encoding='utf-8').read())
+    if os.path.exists(gp_md): gloss_html = markdown_vers_html_doc(open(gp_md, encoding='utf-8').read(), prefix='gloss')
 
     n = len(jalons)
     html = MODELE.replace('__ONGLETS__', onglets)
@@ -861,8 +861,8 @@ function initFromHash(hash) {
             var el = document.getElementById(hash);
             if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 200);
-    } else if (hash.startsWith('doc-')) {
-        switchTab('doc');
+    } else if (hash.startsWith('doc-') || hash.startsWith('gloss-')) {
+        switchTab(hash.startsWith('gloss-') ? 'gloss' : 'doc');
         setTimeout(function() {
             var el = document.getElementById(hash);
             if (el) { el.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
