@@ -664,6 +664,11 @@ S0 $1           ; faisceau a 0 sur les déplacements
 M5 $1           ; fin : coupe réellement le faisceau
 ```
 
+## Génération des G-codes : LaserAtelier (FreeCAD)
+Les G-codes laser sont générés par [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), un atelier FreeCAD maison : gravure de contours, découpe multi-passes (a plat ou sur surface courbe), grille de test puissance/vitesse et fichier de cadrage (tracé de l'enveloppe laser éteint, a lancer avant le vrai job pour vérifier le positionnement et les limites de course).
+
+Les fichiers produits respectent les conventions de la machine : `G43 H100` en en-tête (compensation d'outil — prérequis : `T100 M6` fait dans la session), armement unique `M3 $1` en début de job, puissance par segment `S… $1`, `S0 $1` sur les rapides et `M5 $1` final. Le Z de travail est calé sur la distance focale : la mesurer d'abord (voir Calibrations) avant de générer.
+
 ## Sécurité laser
 **Point important — une pause ne coupe pas le faisceau** : un feed hold ou un M1 ne coupe PAS les broches. Un job laser en pause continue d'émettre au point fixe (risque d'inflammation sur bois). `S0` laisse le laser armé ; seul `M5 $1` ouvre le relais AUX3. Lunettes de protection adaptées au 450 nm obligatoires, extincteur a portée de main, et JAMAIS de gravure sans surveillance.
 

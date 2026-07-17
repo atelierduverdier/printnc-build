@@ -24,6 +24,12 @@ Nouveau dossier gcode_tests dans le dépôt de configuration :
 
 - **test_offset_laser_xy.ngc** : job mixte minimal, croix fraisée puis croix laser au même X0 Y0 programmé. L'écart entre les croix corrige les offsets X/Y de T100 dans tool.tbl. La convention LinuxCNC laisse soupçonner un signe Y inversé dans la table actuelle — à valider avant le premier vrai job mixte.
 
+## LaserAtelier : compensation d'outil ajoutée à l'en-tête des G-codes
+
+[LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), l'atelier FreeCAD maison qui génère les G-codes laser (gravure, découpe, grille de test puissance/vitesse, cadrage), produisait des fichiers sans `G43 H100` : ils n'étaient corrects que si la compensation d'outil du laser était encore active dans LinuxCNC au moment du lancement. Lancés après un redémarrage ou un changement de fraise, le Z de foyer et les X/Y étaient interprétés en coordonnées broche et non nez laser — soit ~90 mm d'écart en Y et un focus faux.
+
+Corrigé dans les quatre générateurs : l'en-tête de tout G-code produit contient désormais `G43 H100` avec, en commentaire dans le fichier même, le prérequis (avoir fait `T100 M6` dans la session). Le parseur d'aperçu interne ignore la nouvelle ligne, l'aperçu de trajet et l'estimation de durée sont inchangés. Les fichiers déjà générés avant le correctif ont été patchés à la main.
+
 ## Documentation du site remise à niveau
 
 La table des sorties AUX de l'onglet Documentation était périmée : AUX2 pilote les ventilateurs de broche (la pompe à eau est sur la sortie dédiée FLOOD), et AUX3 est devenue l'interlock laser, pilotée directement par `spindle.1.on` (elle suit `M3 $1` / `M5 $1`, plus de M64 P3 ni de bouton).
