@@ -1,3 +1,33 @@
+# 17 juillet 2026 — Le laser est opérationnel : PWM direct et workflows de gravure
+
+## Bascule en PWM direct (fin des convertisseurs grillés)
+
+Le laser LaserTree est désormais piloté en PWM direct depuis la sortie SPINDLE_PWM de la Flexi-HAL (optocoupleur → LM358 → fil jaune), sans aucun convertisseur externe. Les deux modules 0-10 V vers PWM qui avaient grillé (juin, puis 16 juillet) étaient très probablement défectueux d'origine — d'autres acheteurs rapportent la même panne. L'architecture PWM directe supprime le maillon fragile.
+
+Réglage critique des jumpers : **P6 sur 5 V** (et non 12 V) et **P7 vertical** (mode PWM). P6 fixe l'alimentation de l'ampli op donc l'amplitude du signal : sur 12 V, le PWM monterait à ~10.5 V dans l'entrée TTL 5 V du laser. Mesures au multimètre : linéarité parfaite de S0 (0.67 V) à S1000 (3.44 V), le plafond à 3.44 V étant simplement la limite de sortie du LM358 (V+ moins 1.5 V), largement au-dessus du seuil TTL. Au passage, correction d'un diagnostic erroné : le plancher de ~0.7 V à S0 n'était pas un « clampage firmware » mais la limite basse du LM358 — et en PWM c'est un niveau logique bas que le laser lit comme « éteint ».
+
+## Correctif du gel des jobs laser (piège multi-broche)
+
+Un job laser seul gelait au premier G1, laser allumé : après un démarrage de broche, LinuxCNC attend `spindle.0.at-speed` même si seule la broche laser (spindle.1) a été commandée, et le VFD à l'arrêt répond FALSE indéfiniment. Corrigé dans le HAL : at-speed est désormais vrai si le VFD est à vitesse OU si la broche 0 est arrêtée. La sécurité fraisage est conservée (le spin-up du VFD reste attendu quand la broche 0 est commandée).
+
+## Workflows de gravure documentés
+
+Nouveau guide pas-à-pas WORKFLOW_LASER.md dans le dépôt de configuration, et nouvelle section « Gravure laser » dans l'onglet Documentation du site. La découverte clé : le palpage du laser (T100 M6) se fait par contact mécanique du nez alu sur la pastille du palpeur fixe, donc le nez est la référence Z du laser dans toute la chaîne d'offsets. Conséquence : le laser se suffit à lui-même dans les deux modes — `T100 M6` seul en mode martyre, et en mode pièce le zéro se prend au papier à cigarette entre le nez alu et la pièce, comme avec une fraise. Le zéro XY se fait au tir à faible puissance (`M3 $1 S20`). Les jobs mixtes (usinage puis gravure, ou l'inverse) partagent le même zéro sans manipulation supplémentaire.
+
+Le message bloquant du toolchange quand le laser crée la référence de session a aussi été rendu non bloquant (même famille de problème que les M1 enchaînés qui bloquaient la reprise dans QtDragon).
+
+## Deux G-codes de calibration
+
+Nouveau dossier gcode_tests dans le dépôt de configuration :
+
+- **test_focale_laser.ngc** : rampe de 15 traits gravés à hauteur Z croissante (3 à 10 mm par pas de 0.5), puissance et vitesse constantes. Le trait le plus fin donne la distance focale, à reporter dans le post CAM.
+
+- **test_offset_laser_xy.ngc** : job mixte minimal, croix fraisée puis croix laser au même X0 Y0 programmé. L'écart entre les croix corrige les offsets X/Y de T100 dans tool.tbl. La convention LinuxCNC laisse soupçonner un signe Y inversé dans la table actuelle — à valider avant le premier vrai job mixte.
+
+## Documentation du site remise à niveau
+
+La table des sorties AUX de l'onglet Documentation était périmée : AUX2 pilote les ventilateurs de broche (la pompe à eau est sur la sortie dédiée FLOOD), et AUX3 est devenue l'interlock laser, pilotée directement par `spindle.1.on` (elle suit `M3 $1` / `M5 $1`, plus de M64 P3 ni de bouton).
+
 # 2 juillet 2026 — Corrections, liens de partage, vote et glossaire
 
 ## Corrections de bugs dans generer_site.py

@@ -355,8 +355,10 @@ Quatre sorties AUX pilotent des relais 24 V. Chaque relais est commandable de DE
 |--------|-----------|-----------------|-------------|
 | AUX0 | motion.digital-out-00 | qtdragon.aux0 | Aspirateur |
 | AUX1 | motion.digital-out-01 | qtdragon.aux1 | Lumière |
-| AUX2 | motion.digital-out-02 | qtdragon.aux2 | Pompe a eau |
-| AUX3 | motion.digital-out-03 | qtdragon.aux3 | Libre (réserve) |
+| AUX2 | motion.digital-out-02 | qtdragon.aux2 | Ventilateurs broche |
+| AUX3 | aucun (suit M3/M5 $1) | aucun | Interlock laser |
+
+**Exception AUX3** : depuis l'arrivée du laser, cette sortie est pilotée directement par `spindle.1.on` (elle suit `M3 $1` / `M5 $1`), sans composant or2. Son pilotage par M64 P3 et par bouton a été retiré pour éviter un double pilotage de la même pin. La pompe a eau du circuit broche est sur la sortie dédiée FLOOD (M8), pas sur une AUX.
 
 Câblage retenu (modules relais en activé HIGH, jumper sur H) :
 - Borne + du bornier AUX vers DC+ du module.
@@ -575,7 +577,7 @@ Le premier outil de la session sert de référence (variables #1000 et #1002). L
 
 - Ref Camera : pose le zéro pièce (G54) à partir de la position du réticule caméra, en appliquant l'offset Camera X/Y (touch off visuel). Ouvrir CAMVIEW et centrer le réticule sur le point d'origine avant de cliquer.
 
-- Aspirateur / Lumière / Pompe : commandent les relais AUX correspondants.
+- Aspirateur / Lumière / Ventilateurs : commandent les relais AUX correspondants.
 
 ## Codes utiles
 - M3 S<vitesse> : broche en marche (sens horaire) a la vitesse donnée. M5 : arrêt broche.
@@ -585,6 +587,92 @@ Le premier outil de la session sert de référence (variables #1000 et #1002). L
 - M7 / M8 / M9 : brouillard / arrosage / arrêt des deux.
 
 - OPT STOP : arrêt optionnel sur M1. OPT BLOCK : saut des lignes commençant par /.
+
+# Gravure laser
+
+## Le module et son pilotage
+Module LaserTree LT-80W-AA-PRO (10 W optique, 450 nm, entrée PWM TTL 5 V) monté sur une glissière amovible à l'avant du porte-broche. Il est piloté comme une deuxième broche LinuxCNC (spindle.1) : le mot S est une consigne de puissance de 0 a 1000, pas une vitesse.
+
+- `M3 $1 S500` : laser en marche a 50 % de puissance.
+
+- `S0 $1` : puissance a zéro (sur les déplacements rapides), mais laser toujours ARMÉ.
+
+- `M5 $1` : arrêt réel — c'est la seule commande qui ouvre le relais AUX3 et coupe le +24 V du laser.
+
+La chaîne de puissance est en PWM direct : spindle.1 → composant HAL laser_scale (gain 0.1) → sortie SPINDLE_PWM de la Flexi-HAL → optocoupleur → ampli LM358 → fil jaune du laser. Aucun convertisseur externe (les modules 0-10 V vers PWM utilises auparavant ont grillé deux fois — défaut du produit).
+
+**Point important — jumpers P6/P7 de la Flexi-HAL** : P6 sur 5 V et P7 en position verticale (mode PWM). P6 fixe l'alimentation de l'ampli op, donc l'amplitude du signal : sur 12 V, le PWM monterait a ~10.5 V droit dans l'entrée TTL 5 V du laser. P6 sur 5 V est ce qui protège le laser.
+
+## L'outil T100 et son palpage
+Les numéros d'outil ≥ 100 sont réservés aux lasers. Le laser est déclaré T100 dans la table d'outils : offsets X/Y saisis une fois (position du nez par rapport a l'axe broche, environ X+2 / Y-90), offset Z re-palpé automatiquement a chaque `T100 M6`.
+
+Le palpage du laser est MÉCANIQUE : le script toolchange.ngc décale automatiquement la broche de l'inverse de l'offset laser pour que ce soit le nez alu du laser qui vienne toucher la pastille du palpeur fixe. Le nez est donc la référence Z du laser dans toute la chaîne d'offsets — c'est ce qui rend les workflows ci-dessous cohérents.
+
+## La règle d'or des modes
+Le premier outil palpé de la session devient la référence (#1000), les suivants reçoivent un offset relatif. Ce qui change entre les modes, c'est ou vit le zéro Z :
+
+- Mode martyre (#1001 = 0) : zéro Z défini automatiquement au palpage (la distance palpeur-martyre est mécanique, 50.525 mm). N'importe quel outil peut être la référence, Y COMPRIS le laser : `T100 M6` seul suffit.
+
+- Mode pièce (#1001 = 1) : zéro Z pris manuellement sur le dessus de la pièce. La référence doit être l'outil qui a physiquement pris ce zéro — le laser qualifie aussi, en touchant la pièce avec son nez alu (papier a cigarette), exactement comme il touche la pastille du palpeur au M6.
+
+Le laser se suffit donc a lui-même dans les deux modes, et on peut librement mélanger fraisage et gravure dans une même session : chaque outil hérite du même zéro via son offset relatif.
+
+## Workflow — gravure seule, zéro sur le martyre
+1. Poser la pièce ou la chute sur le martyre.
+
+2. Boutons Reset Ref puis Mode Martyre.
+
+3. MDI : `T100 M6` — le laser se palpe et définit la référence et le zéro martyre.
+
+4. Zéro XY au tir a faible puissance (voir plus bas).
+
+5. Lancer la gravure : le dessus de la pièce est a Z = épaisseur, le point focal a Z = épaisseur + focale.
+
+## Workflow — gravure seule, zéro sur le dessus de la pièce
+1. Reset Ref puis Mode Pièce.
+
+2. MDI : `T100 M6` — le laser devient la référence de session.
+
+3. Zéro Z au papier a cigarette entre le NEZ ALU du laser et la pièce, puis touch off Z0. Approche douce au petit incrément : ne pas forcer (lentille et air assist juste derrière).
+
+4. Zéro XY au tir a faible puissance.
+
+5. Graver : le point focal est a Z = focale (comptée depuis le nez).
+
+## Workflow — job mixte, usinage puis gravure
+C'est le flux naturel du système, rien de spécial a faire : Reset Ref, zéros comme pour un usinage normal, `T2 M6` et usinage (la fraise est la référence), puis `T100 M6` (monter la glissière pendant la pause) et gravure. Le laser reçoit son offset relatif a la fraise et connaît exactement le zéro de l'usinage. L'ordre inverse (graver puis usiner) marche aussi dans les deux modes, a condition qu'en mode pièce le zéro ait été pris au nez du laser.
+
+## Zéro XY au tir a faible puissance
+Avec `T100 M6` fait et `G43 H100` actif (les offsets XY du laser s'appliquent, le touch off est donc directement valable) :
+
+1. Lunettes laser.
+
+2. MDI : `M3 $1 S20` (2 %, point visible sans marquer).
+
+3. Jog pour amener le point sur le coin ou le repère de la pièce.
+
+4. MDI : `M5 $1`, puis touch off X0 Y0.
+
+## En-tête type d'un G-code de gravure
+```
+T100 M6
+G43 H100
+M3 $1 S0        ; arme le laser (relais AUX3), faisceau a 0
+S500 $1         ; puissance pendant les G1 (500 = 50 %)
+G1 X.. Y.. F1500
+S0 $1           ; faisceau a 0 sur les déplacements
+M5 $1           ; fin : coupe réellement le faisceau
+```
+
+## Sécurité laser
+**Point important — une pause ne coupe pas le faisceau** : un feed hold ou un M1 ne coupe PAS les broches. Un job laser en pause continue d'émettre au point fixe (risque d'inflammation sur bois). `S0` laisse le laser armé ; seul `M5 $1` ouvre le relais AUX3. Lunettes de protection adaptées au 450 nm obligatoires, extincteur a portée de main, et JAMAIS de gravure sans surveillance.
+
+## Calibrations a faire une fois
+Deux programmes de test sont dans le dossier gcode_tests du [dépôt de configuration](https://github.com/atelierduverdier/printnc-config) (instructions détaillées en tête de chaque fichier) :
+
+- test_focale_laser.ngc : rampe de traits gravés a hauteur Z croissante, a puissance et vitesse constantes. Le trait le plus fin donne la distance focale (comptée depuis le nez), a reporter dans le post CAM.
+
+- test_offset_laser_xy.ngc : job mixte minimal — croix fraisée puis croix laser au même X0 Y0 programme. L'écart entre les deux croix corrige les offsets X/Y de T100 dans la table d'outils. Indispensable avant le premier vrai job mixte.
 
 # Maintenance
 
