@@ -603,6 +603,8 @@ La chaîne de puissance est en PWM direct : spindle.1 → composant HAL laser_sc
 
 **Point important — jumpers P6/P7 de la Flexi-HAL** : P6 sur 5 V et P7 en position verticale (mode PWM). P6 fixe l'alimentation de l'ampli op, donc l'amplitude du signal : sur 12 V, le PWM monterait a ~10.5 V droit dans l'entrée TTL 5 V du laser. P6 sur 5 V est ce qui protège le laser.
 
+**Puissance asservie à la vitesse réelle** : le PWM sort à puissance fixe, or quand la machine ralentit (accélération en début de trait, coins) elle brûle plus longtemps au même endroit — début de trait plus épais. Le HAL insère avant `laser_scale` un étage qui multiplie la consigne S par le rapport vitesse réelle / vitesse demandée (`motion.current-vel` / `motion.requested-vel`) : la puissance suit la vitesse (0 à l'arrêt, pleine à vitesse de croisière), pour une énergie déposée constante par millimètre. Équivalent du « dynamic power » des contrôleurs laser dédiés. La puissance moyenne en est un peu réduite : re-régler à la hausse.
+
 ## L'outil T100 et son palpage
 Les numéros d'outil ≥ 100 sont réservés aux lasers. Le laser est déclaré T100 dans la table d'outils : offsets X/Y saisis une fois (position du nez par rapport a l'axe broche, environ X+2 / Y-90), offset Z re-palpé automatiquement a chaque `T100 M6`.
 
@@ -665,9 +667,15 @@ M5 $1           ; fin : coupe réellement le faisceau
 ```
 
 ## Génération des G-codes : LaserAtelier (FreeCAD)
-Les G-codes laser sont générés par [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), un atelier FreeCAD maison : gravure de contours, découpe multi-passes (a plat ou sur surface courbe), grille de test puissance/vitesse et fichier de cadrage (tracé de l'enveloppe laser éteint, a lancer avant le vrai job pour vérifier le positionnement et les limites de course).
+Les G-codes laser sont générés par [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), un atelier FreeCAD maison. Modes disponibles :
 
-Les fichiers produits respectent les conventions de la machine : `G43 H100` en en-tête (compensation d'outil — prérequis : `T100 M6` fait dans la session), armement unique `M3 $1` en début de job, puissance par segment `S… $1`, `S0 $1` sur les rapides et `M5 $1` final. Le Z de travail est calé sur la distance focale : la mesurer d'abord (voir Calibrations) avant de générer.
+- **Gravure remplie (noir)** : grave un texte/forme en noir plein — remplissage par hachures en défocus (point élargi, rentré du rayon de point pour rester dans le bord, liseré de fermeture) puis contour repassé net au foyer, épaisseur de trait réglable.
+- **Hachures 2D**, **Marquage sur surface courbe** (suit le relief d'un modèle 3D), **Projection sur surface 3D**.
+- **Découpe multi-passes**, à plat ou sur surface courbée (compensation de kerf, passes progressives, rampe de puissance).
+- **Grille de test puissance/vitesse** et **Bande de calibration défocus** : deux mires de réglage gravées en un seul job (voir Calibrations).
+- **Job combiné** (plusieurs opérations, un seul armement) et **fichier de cadrage** (tracé de l'enveloppe, laser éteint ou faisceau de visée à très faible puissance, à lancer avant le vrai job pour vérifier le positionnement).
+
+Les fichiers produits respectent les conventions de la machine : `G43 H100` en en-tête (compensation d'outil — prérequis : `T100 M6` fait dans la session), armement unique `M3 $1` en début de job, puissance par segment `S… $1`, `S0 $1` sur les rapides et `M5 $1` final. Le Z de travail est calé sur la distance focale (~8,5 mm sous le nez sur ce laser) : la mesurer d'abord (voir Calibrations) avant de générer.
 
 ## Sécurité laser
 **Point important — une pause ne coupe pas le faisceau** : un feed hold ou un M1 ne coupe PAS les broches. Un job laser en pause continue d'émettre au point fixe (risque d'inflammation sur bois). `S0` laisse le laser armé ; seul `M5 $1` ouvre le relais AUX3. Lunettes de protection adaptées au 450 nm obligatoires, extincteur a portée de main, et JAMAIS de gravure sans surveillance.
@@ -675,7 +683,7 @@ Les fichiers produits respectent les conventions de la machine : `G43 H100` en e
 ## Calibrations a faire une fois
 Deux programmes de test sont dans le dossier gcode_tests du [dépôt de configuration](https://github.com/atelierduverdier/printnc-config) (instructions détaillées en tête de chaque fichier) :
 
-- test_focale_laser.ngc : rampe de traits gravés a hauteur Z croissante, a puissance et vitesse constantes. Le trait le plus fin donne la distance focale (comptée depuis le nez), a reporter dans le post CAM.
+- test_focale_laser.ngc : rampe de traits gravés a hauteur Z croissante, a puissance et vitesse constantes. Le trait le plus fin donne la distance focale (comptée depuis le nez), a reporter dans le post CAM. LaserAtelier propose désormais l'équivalent en plus complet (mode **Bande de calibration défocus** : hauteurs et puissances réglables, étiquettes gravées, rampe de puissance) : au-delà du foyer, il sert aussi à mesurer la divergence du point pour le remplissage « noir plein ».
 
 - test_offset_laser_xy.ngc : job mixte minimal — croix fraisée puis croix laser au même X0 Y0 programme. L'écart entre les deux croix corrige les offsets X/Y de T100 dans la table d'outils. Indispensable avant le premier vrai job mixte.
 

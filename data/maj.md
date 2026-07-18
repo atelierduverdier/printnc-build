@@ -1,3 +1,35 @@
+# 18 juillet 2026 — Gravure « noir plein », calibration du défocus et puissance laser asservie à la vitesse
+
+Grosse journée côté gravure. [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), l'atelier FreeCAD maison, gagne deux modes majeurs, et le pilotage du laser côté machine règle enfin le défaut de sur-brûlure aux départs de trait.
+
+## Gravure « noir plein » : remplissage en défocus + contour au foyer
+
+Au foyer, le point laser est étroit — parfait pour un trait fin, inutilisable pour noircir une surface sans laisser des dizaines de bandes claires. La solution : éloigner le bec du foyer pour élargir le point, et espacer les hachures d'à peine moins que ce point élargi. Nouveau mode **Gravure remplie (noir)** : il grave un texte/forme 2D en noir plein en deux temps — d'abord le remplissage en défocus (point élargi), puis le contour repassé **net au foyer** par-dessus pour une arête propre.
+
+Deux finitions ont demandé quelques allers-retours sur des essais réels (une lettre « A » sur MDF). D'abord, la brûlure débordait du contour d'environ un rayon de point : le remplissage est désormais automatiquement **rentré du rayon de point** (offset 2D vers l'intérieur), pour que la brûlure s'arrête pile au bord. Ensuite, les hachures parallèles laissaient une fine bande blanche le long des bords obliques : un **liseré** trace maintenant le pourtour de la zone remplie et la comble. L'épaisseur du trait de contour est réglable — on saisit une largeur en millimètres, l'atelier calcule le défocus correspondant.
+
+## Une bande de calibration pour le défocus
+
+Tout le mode remplissage repose sur un modèle de divergence du faisceau, calibré à partir de **deux mesures réelles** du point (au foyer, puis à un défocus connu) plutôt que sur une valeur devinée. Nouveau mode **Bande de calibration défocus** : il grave d'un seul job une rangée de courts traits à hauteurs de bec croissantes, chacun étiqueté à gauche par sa **hauteur** et à droite par sa **puissance**. On mesure l'épaisseur de chaque trait : le plus fin donne le foyer, un trait bien défocalisé donne la divergence.
+
+Deux détails découverts à l'usage et corrigés : à puissance constante les traits très défocalisés s'effacent (le point étalé dépose moins d'énergie) — d'où une **rampe de puissance** optionnelle qui monte le S avec la hauteur pour garder tous les traits mesurables ; et la police vectorielle maison ne faisait que les chiffres — elle gère maintenant le point décimal, pour des étiquettes de pas fin (0,25 mm) non ambiguës.
+
+Résultat sur ce laser : foyer à ~8 mm sous le nez, point au foyer ~0,1 mm, faisceau à **divergence lente** (1,2 mm de large seulement à 27 mm de hauteur). La profondeur de foyer est large, la hauteur de gravure n'est donc pas critique.
+
+## Puissance laser asservie à la vitesse réelle (fin de la sur-brûlure aux départs)
+
+La Flexi-HAL sort un PWM à puissance **fixe** : quand la machine ralentit — accélération en début de trait, coins — elle brûle plus longtemps au même endroit, d'où un début de trait plus épais que le reste, bien visible sur les remplissages. Correctif dans le HAL (`remora-flexi.hal`) : un étage multiplie la consigne S par le rapport **vitesse réelle / vitesse demandée** (`motion.current-vel` / `motion.requested-vel`) avant `laser_scale`. La puissance suit désormais la vitesse — 0 à l'arrêt, pleine à vitesse de croisière — pour une énergie déposée constante par millimètre. C'est l'équivalent du mode « dynamic power » des contrôleurs laser dédiés, mais côté LinuxCNC. Contrepartie à connaître : la puissance moyenne baisse (surtout sur les traits courts), il faut donc re-régler un peu à la hausse.
+
+## Corrections et confort dans LaserAtelier
+
+- **Ordre de gravure de la grille de test** : l'optimisation par proximité entrelaçait les cellules (trajet dans tous les sens). Chaque carré est désormais gravé en entier, en partant du bas à gauche, rangée par rangée.
+- **Parenthèses imbriquées et accents** qui bloquaient l'interpréteur RS274 de LinuxCNC (« passe(s) », « Étiquettes »...) : un assainisseur nettoie la sortie de tous les générateurs (parenthèses internes en crochets, accents translittérés).
+- **Préréglages matériau** enregistrables/rechargeables (grille de test, gravure remplie), avec résumé.
+- **Réglages centralisés** dans un panneau Préférences (dossier G-code, vitesse rapide pour l'estimation, marge de survol, faisceau de visée pour le cadrage, garde-fous de découpe, profil du bec).
+- **Refonte de l'interface** : barre d'outils et menu regroupés par thème avec des séparateurs, et dans les panneaux un bandeau d'en-tête (icône + nom du mode) et des titres de section pour ne plus se perdre dans les options.
+
+---
+
 # 17 juillet 2026 — Le laser est opérationnel : PWM direct et workflows de gravure
 
 ## Bascule en PWM direct (fin des convertisseurs grillés)
