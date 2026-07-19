@@ -67,9 +67,9 @@ MINI_DIR = os.path.join(KIT_DIR, 'miniatures')
 SRC_DIR = os.path.join(KIT_DIR, 'videos_sources')
 FAVICON = os.path.join(KIT_DIR, 'favicon.svg')
 
-PHASE_LABEL = {'meca': 'Mecanique', 'elec': 'Electronique', 'soft': 'LinuxCNC'}
+PHASE_LABEL = {'meca': 'Mecanique', 'elec': 'Electronique', 'soft': 'LinuxCNC', 'laser': 'Laser'}
 PHASE_FROM_LABEL = {v: k for k, v in PHASE_LABEL.items()}
-PHASE_COLORS = {'meca': '#378ADD', 'elec': '#EF9F27', 'soft': '#1D9E75'}
+PHASE_COLORS = {'meca': '#378ADD', 'elec': '#EF9F27', 'soft': '#1D9E75', 'laser': '#C44A31'}
 
 APP_ORANGE = '#e8821e'
 
