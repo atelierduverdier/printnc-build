@@ -25,7 +25,8 @@ Then commit `data/…` **and** the regenerated `index.html` together.
 
 - **`videos.csv`** — the timeline (one row per video): `date, phase, fichier, lien, texte, duree, jalon`.
   Dates must be `AAAA-MM-JJ` and zero-padded (`2026-06-09`, not `2026-6-9`) or the chronological sort breaks.
-  Phase: `1` méca / `2` élec / `3` soft.
+  Phase: `meca` / `elec` / `soft` / `laser` (string slugs — keep `phase_info` in `generer_site.py`
+  and `PHASE_LABEL`/`PHASE_COLORS` in `gestion_site.py` in sync when adding one).
 - **`mois.json`** — month titles/descriptions for the timeline.
 - **`maj.md`** → "Mises à jour" tab. **Changelog, newest entry first** (`# JJ mois AAAA — titre`, then `##` sections).
 - **`doc.md`** → "Documentation" tab (machine documentation).

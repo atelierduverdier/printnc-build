@@ -493,6 +493,39 @@ def upstream_ref():
 # =========================================================================
 #  PAGE : Tableau de bord
 # =========================================================================
+class BarrePhase(QWidget):
+    """Barre de progression horizontale peinte a la main : piste sombre,
+    remplissage colore net (pas de degrade Qt, dont les stops confondus
+    rendent le bord flou et la barre illisible)."""
+
+    def __init__(self, color):
+        super().__init__()
+        self._color = QColor(color)
+        self._fraction = 0.0
+        self.setFixedHeight(14)
+        self.setMinimumWidth(80)
+
+    def set_fraction(self, f):
+        self._fraction = max(0.0, min(1.0, f))
+        self.update()
+
+    def paintEvent(self, _event):
+        p = QPainter(self)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(Qt.NoPen)
+        rayon = self.height() / 2
+        piste = QRectF(0, 0, self.width(), self.height())
+        p.setBrush(QColor('#13110e'))
+        p.drawRoundedRect(piste, rayon, rayon)
+        if self._fraction > 0:
+            # largeur minimale = un cercle complet, pour que les tres
+            # petits pourcentages restent visibles et bien arrondis
+            larg = max(self.height(), self.width() * self._fraction)
+            p.setBrush(self._color)
+            p.drawRoundedRect(QRectF(0, 0, larg, self.height()), rayon, rayon)
+        p.end()
+
+
 class DashboardPage(QWidget):
     def __init__(self, runner):
         super().__init__()
@@ -515,8 +548,7 @@ class DashboardPage(QWidget):
         root.addLayout(grid)
         for i, (key, label) in enumerate([
                 ('videos', 'Videos'), ('mois', 'Mois couverts'),
-                ('meca', 'Mecanique'), ('elec', 'Electronique'),
-                ('soft', 'LinuxCNC'), ('git', 'Etat Git')]):
+                ('git', 'Etat Git')]):
             card = QFrame()
             card.setObjectName('statCard')
             cl = QVBoxLayout(card)
@@ -533,29 +565,23 @@ class DashboardPage(QWidget):
 
         # --- Repartition par phase ---
         c1 = section_card(root, "Repartition par phase")
-        for key in ('meca', 'elec', 'soft'):
+        for key in PHASE_LABEL:
             row = QHBoxLayout()
             row.setSpacing(10)
             dot = QLabel('●')
             dot.setStyleSheet(f'color:{PHASE_COLORS[key]}; font-size:14px;')
             lbl = QLabel(PHASE_LABEL[key])
             lbl.setStyleSheet('color:#f0ebe2; min-width:95px;')
-            bar_bg = QFrame()
-            bar_bg.setFixedHeight(16)
-            # Le remplissage est dessine via un gradient CSS lineaire : on
-            # controle la largeur du segment orange via le stop de couleur.
-            # fond sombre par defaut (0%)
-            bar_bg.setStyleSheet(
-                'background:#13110e; border-radius:4px;')
-            pct = QLabel('0%')
-            pct.setStyleSheet('color:#6b6356; min-width:42px;')
+            bar = BarrePhase(PHASE_COLORS[key])
+            pct = QLabel('–')
+            pct.setStyleSheet('color:#a89e8c; min-width:110px;')
             pct.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
             row.addWidget(dot)
             row.addWidget(lbl)
-            row.addWidget(bar_bg, 1)
+            row.addWidget(bar, 1)
             row.addWidget(pct)
             c1.addLayout(row)
-            self.phase_bars[key] = (bar_bg, pct)   # (cadre, etiquette %)
+            self.phase_bars[key] = (bar, pct)   # (barre, etiquette compte + %)
 
         # --- Etat git ---
         c2 = section_card(root, "Depot Git")
@@ -597,24 +623,14 @@ class DashboardPage(QWidget):
         mois = set(v['date'][:7] for v in vids if v.get('date'))
         self.stat_labels['videos'].setText(str(n))
         self.stat_labels['mois'].setText(str(len(mois)))
-        self.stat_labels['meca'].setText(str(phases.get('meca', 0)))
-        self.stat_labels['elec'].setText(str(phases.get('elec', 0)))
-        self.stat_labels['soft'].setText(str(phases.get('soft', 0)))
         # Barres
         total = max(1, n)
-        for key in ('meca', 'elec', 'soft'):
-            bar_bg, pct_lbl = self.phase_bars[key]
+        for key in PHASE_LABEL:
+            bar, pct_lbl = self.phase_bars[key]
             val = phases.get(key, 0)
             pct = int(round(val / total * 100))
-            pct_lbl.setText(f'{pct}%')
-            # Remplissage via un gradient lineaire CSS : segment de couleur
-            # jusqu'a pct%, puis fond sombre. Infailible, aligne a gauche.
-            color = PHASE_COLORS[key]
-            bar_bg.setStyleSheet(
-                'border-radius:4px;'
-                f'background: qlineargradient(x1:0, y1:0, x2:1, y2:0,'
-                f' stop:0 {color}, stop:{pct/100:.3f} {color},'
-                f' stop:{pct/100:.3f} #13110e, stop:1 #13110e);')
+            bar.set_fraction(val / total)
+            pct_lbl.setText(f'{val} video{"s" if val > 1 else ""} · {pct}%')
         # Git (synchrone, rapide)
         br, _ = run_git_sync(['rev-parse', '--abbrev-ref', 'HEAD'])
         ab, _ = run_git_sync(['rev-list', '--left-right', '--count',
@@ -832,7 +848,7 @@ class VideoPage(QWidget):
         g.addWidget(self.date_edit, 0, 1)
         g.addWidget(label_muted("Phase"), 0, 2)
         self.combo_phase = QComboBox()
-        for label in ('Mecanique', 'Electronique', 'LinuxCNC'):
+        for label in PHASE_LABEL.values():
             self.combo_phase.addItem(label)
         g.addWidget(self.combo_phase, 0, 3)
         g.addWidget(label_muted("Lien Instagram"), 1, 0)
@@ -1370,7 +1386,7 @@ class EditVideoDialog(QDialog):
         # Phase
         g.addWidget(label_muted("Phase"), 2, 0)
         self.combo_phase = QComboBox()
-        for label in ('Mecanique', 'Electronique', 'LinuxCNC'):
+        for label in PHASE_LABEL.values():
             self.combo_phase.addItem(label)
         phase = self.video_row.get('phase', 'meca')
         if phase in PHASE_LABEL:
@@ -1450,6 +1466,10 @@ class DonneesPage(QWidget):
          "Le changelog technique (onglet « Mises a jour »)."),
         ('data/doc.md', 'Documentation',
          "La doc de reference (onglet « Documentation »)."),
+        ('data/glossaire.md', 'Glossaire',
+         "Les definitions (onglet « Glossaire »)."),
+        ('data/mois.json', 'Mois',
+         "Titres et descriptions des mois de la timeline."),
     ]
 
     def __init__(self, runner):

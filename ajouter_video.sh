@@ -113,11 +113,12 @@ fi
 echo "Date retenue : $DATE"
 
 echo ""
-echo "Phase : 1) meca  2) elec  3) soft"
-read -r -p "Choix [1-3] (defaut: 1) : " PHASE_NUM
+echo "Phase : 1) meca  2) elec  3) soft  4) laser"
+read -r -p "Choix [1-4] (defaut: 1) : " PHASE_NUM
 case "$PHASE_NUM" in
     2) PHASE="elec" ;;
     3) PHASE="soft" ;;
+    4) PHASE="laser" ;;
     *) PHASE="meca" ;;
 esac
 
@@ -139,8 +140,9 @@ if [[ "$CSV_LIEN" == *","* ]]; then
     CSV_LIEN="\"$CSV_LIEN\""
 fi
 
-# Le CSV existant est en CRLF : on ajoute une ligne au meme format
-printf '%s,%s,%s,%s,%s\r\n' "$DATE" "$PHASE" "$NOM_FICHIER" "$CSV_LIEN" "$CSV_TEXTE" >> "$CSV"
+# Le CSV existant est en CRLF : on ajoute une ligne au meme format.
+# 7 champs (duree et jalon vides) pour rester aligne sur l'en-tete.
+printf '%s,%s,%s,%s,%s,,\r\n' "$DATE" "$PHASE" "$NOM_FICHIER" "$CSV_LIEN" "$CSV_TEXTE" >> "$CSV"
 echo ""
 echo "Ligne ajoutee dans $CSV"
 

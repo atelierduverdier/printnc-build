@@ -24,6 +24,11 @@
     "titre": "La renaissance et les reglages fins",
     "desc": "Nouvelle carte, premiere decoupe, palpeur et precision."
   },
+  "2026-07": {
+    "nom": "Juillet 2026",
+    "titre": "Le laser entre en scene",
+    "desc": "Module laser sur l'axe Z, gravure et atelier FreeCAD LaserAtelier."
+  },
   "2026-06": {
     "nom": "Juin 2026",
     "titre": "ATC, relais et interface",

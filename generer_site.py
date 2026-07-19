@@ -23,6 +23,7 @@ phase_info = {
     'meca': {'label': 'Mecanique',    'color': '#378ADD', 'bg': 'rgba(55,138,221,.12)'},
     'elec': {'label': 'Electronique', 'color': '#EF9F27', 'bg': 'rgba(239,159,39,.12)'},
     'soft': {'label': 'LinuxCNC',     'color': '#1D9E75', 'bg': 'rgba(29,158,117,.12)'},
+    'laser': {'label': 'Laser',       'color': '#C44A31', 'bg': 'rgba(196,74,49,.12)'},
 }
 
 # Noms des mois pour les onglets (FR)
@@ -294,10 +295,12 @@ def construire():
     </section>''')
 
         pi = phase_info.get(j['phase'], phase_info['meca'])
-        lien = j.get('lien', '').strip()
+        # (x or '') : DictReader renvoie None pour les colonnes absentes
+        # (vieilles lignes a 5 champs sans duree/jalon)
+        lien = (j.get('lien') or '').strip()
         fnoext = j['fichier'].replace('.mp4', '') if j.get('fichier') else ''
-        duree = j.get('duree', '').strip()
-        is_jalon = j.get('jalon', '').strip().lower() in ('oui', '1', 'true')
+        duree = (j.get('duree') or '').strip()
+        is_jalon = (j.get('jalon') or '').strip().lower() in ('oui', '1', 'true')
 
         if fnoext:
             article_id = f'v-{fnoext}'
@@ -648,6 +651,7 @@ __ONGLETS__
       <button class="pbtn" data-filter="meca">Mecanique</button>
       <button class="pbtn" data-filter="elec">Electronique</button>
       <button class="pbtn" data-filter="soft">LinuxCNC</button>
+      <button class="pbtn" data-filter="laser">Laser</button>
       </div>
       <div class="tab-actions">
         <span class="copy-ok" id="copy-ok">✓ Copié !</span>
