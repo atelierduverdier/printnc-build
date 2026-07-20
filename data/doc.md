@@ -667,7 +667,7 @@ M5 $1           ; fin : coupe réellement le faisceau
 ```
 
 ## Génération des G-codes : LaserAtelier (FreeCAD)
-Les G-codes laser sont générés par [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), un atelier FreeCAD maison. Modes disponibles :
+Les G-codes laser sont générés par **LaserAtelier**, un atelier FreeCAD maison — [documentation complète](https://laser.atelierduverdier.fr) · [code source](https://github.com/atelierduverdier/LaserAtelier). Modes disponibles :
 
 - **Gravure remplie (noir)** : grave un texte/forme en noir plein — remplissage par hachures en défocus (point élargi, rentré du rayon de point pour rester dans le bord, liseré de fermeture) puis contour repassé net au foyer, épaisseur de trait réglable.
 - **Hachures 2D**, **Marquage sur surface courbe** (suit le relief d'un modèle 3D), **Projection sur surface 3D**.
