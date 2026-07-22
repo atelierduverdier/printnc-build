@@ -14,6 +14,8 @@ La planche de calibration matériau a montré qu'au défocus, la brûlure réell
 
 Signature de l'atelier (le petit chapeau) sur chaque icône et chaque panneau, numéro de version affiché partout (y compris en tête de chaque G-code généré), métadonnées `package.xml` pour le gestionnaire d'extensions FreeCAD, et nouveau logo du site de documentation.
 
+**☕ LaserAtelier vous est utile ?** Vous pouvez soutenir son développement sur [ko-fi.com/atelierduverdier](https://ko-fi.com/atelierduverdier).
+
 # 18 juillet 2026 — Gravure « noir plein », calibration du défocus et puissance laser asservie à la vitesse
 
 Grosse journée côté gravure. [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), l'atelier FreeCAD maison, gagne deux modes majeurs, et le pilotage du laser côté machine règle enfin le défaut de sur-brûlure aux départs de trait.
