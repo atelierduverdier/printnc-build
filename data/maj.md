@@ -1,3 +1,19 @@
+# 22 juillet 2026 — LaserAtelier passe en v1.1.0 : dialectes GRBL/grblHAL, largeurs brûlées mesurées
+
+[LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) est taggé **v1.1.0** ([doc complète](https://laser.atelierduverdier.fr)), sous licence LGPL-2.1-or-later. Au menu de cette version :
+
+## Compatibilité GRBL et grblHAL (non testée)
+
+Nouveau réglage « Dialecte G-code » dans les Préférences, par profil laser : en plus de LinuxCNC, l'atelier génère du **GRBL 1.1** pur (armement `M4` en mode laser `$32=1`, pas de sélecteur de broche, pas de `G64` — le lissage de trajectoire est natif chez GRBL) et du **grblHAL** (idem, mais avec le changement d'outil `T`/`M6` + `G43 H` si le firmware embarque la table d'outils). Aucun palpeur requis : le zéro Z se pose sur la surface à la cale ou au réglet. **Attention : ces deux dialectes ne sont pas encore testés sur machine réelle** — la PrintNC de l'atelier tourne sous LinuxCNC. Retours bienvenus.
+
+## Remplissage : hachures resserrées à la largeur réellement brûlée
+
+La planche de calibration matériau a montré qu'au défocus, la brûlure réelle est plus étroite que le point optique aux faibles puissances (0,50 mm à S200 contre 1,18 mm optique sur MDF) — d'où des lignes visibles sur les tons clairs. La Gravure remplie resserre désormais automatiquement l'espacement de ses hachures à la largeur brûlée mesurée. Les mesures se saisissent via le bouton « Saisir les mesures de la planche » du panneau Grille de test.
+
+## Et aussi
+
+Signature de l'atelier (le petit chapeau) sur chaque icône et chaque panneau, numéro de version affiché partout (y compris en tête de chaque G-code généré), métadonnées `package.xml` pour le gestionnaire d'extensions FreeCAD, et nouveau logo du site de documentation.
+
 # 18 juillet 2026 — Gravure « noir plein », calibration du défocus et puissance laser asservie à la vitesse
 
 Grosse journée côté gravure. [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), l'atelier FreeCAD maison, gagne deux modes majeurs, et le pilotage du laser côté machine règle enfin le défaut de sur-brûlure aux départs de trait.

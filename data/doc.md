@@ -677,6 +677,8 @@ Les G-codes laser sont générés par **LaserAtelier**, un atelier FreeCAD maiso
 
 Les fichiers produits respectent les conventions de la machine : `G43 H100` en en-tête (compensation d'outil — prérequis : `T100 M6` fait dans la session), armement unique `M3 $1` en début de job, puissance par segment `S… $1`, `S0 $1` sur les rapides et `M5 $1` final. Le Z de travail est calé sur la distance focale (~8,5 mm sous le nez sur ce laser) : la mesurer d'abord (voir Calibrations) avant de générer.
 
+Depuis la v1.1.0, LaserAtelier sait aussi générer du G-code **GRBL** et **grblHAL** (réglage « Dialecte G-code » des Préférences, par profil laser) : armement `M4` en mode laser (`$32=1`), pas de sélecteur de broche ni de `G64`, et pour grblHAL le `T`/`M6` + `G43 H` si le firmware embarque la table d'outils. **Ces deux dialectes ne sont pas encore testés sur machine réelle** — la PrintNC de l'atelier tourne sous LinuxCNC ; retours bienvenus.
+
 ## Sécurité laser
 **Point important — une pause ne coupe pas le faisceau** : un feed hold ou un M1 ne coupe PAS les broches. Un job laser en pause continue d'émettre au point fixe (risque d'inflammation sur bois). `S0` laisse le laser armé ; seul `M5 $1` ouvre le relais AUX3. Lunettes de protection adaptées au 450 nm obligatoires, extincteur a portée de main, et JAMAIS de gravure sans surveillance.
 
