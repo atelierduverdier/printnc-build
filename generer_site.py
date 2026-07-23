@@ -620,7 +620,7 @@ MODELE = '''<!DOCTYPE html>
   #share-toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 </style>
 </head>
-<body>
+<body class="jour">
 <header>
   <div class="wrap">
     <img class="logo" src="https://raw.githubusercontent.com/atelierduverdier/printnc-config/main/PrintNC.png" alt="Logo PrintNC Atelier du Verdier" onerror="this.style.display='none'">
@@ -819,7 +819,7 @@ document.getElementById('lightbox').addEventListener('click', (e) => { if (e.tar
 
 // Theme jour/nuit
 const toggle = document.getElementById('theme-toggle');
-if (localStorage.getItem('theme') === 'jour') document.body.classList.add('jour');
+if (localStorage.getItem('theme') === 'nuit') document.body.classList.remove('jour');
 toggle.innerText = document.body.classList.contains('jour') ? '🌙' : '☀';
 toggle.addEventListener('click', () => {
     document.body.classList.toggle('jour');
