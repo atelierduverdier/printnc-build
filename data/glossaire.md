@@ -15,11 +15,19 @@ Nomenclature ou liste des matériaux. Désigne le tableau récapitulatif de tout
 ## Boucle fermée (Closed loop)
 Mode de fonctionnement d'un moteur pas à pas équipé d'un encodeur. Contrairement à la boucle ouverte (où les pas perdus ne sont pas détectés), le driver vérifie en permanence que la position réelle correspond à la position commandée. Sur cette PrintNC, les drivers CL57T v4.1 fonctionnent en boucle fermée avec les Nema 23.
 
+## Brûlure (largeur brûlée)
+
+Largeur réellement noircie par le laser, mesurée au pied à coulisse ou sur photo redressée. Elle n'est **pas** le diamètre optique du point : au foyer, seule la partie centrale du faisceau dépasse le seuil de combustion du bois, donc la brûlure est plus étroite (0,10 mm à S200 contre 0,30 à S1000 sur hêtre). C'est elle, et non le point optique, qui doit régler l'espacement des hachures.
+
 ## Broche (Spindle)
 Moteur électrique dédié à la rotation de l'outil de coupe. Ici, une G-Penny 2.2 kW refroidie par eau, avec une pince ER20, pouvant monter jusqu'à 24 000 tr/min. Pilotée par un VFD.
 
 ## CAM (Computer-Aided Manufacturing)
 Logiciel de génération de parcours d'outils à partir d'un modèle 3D. Produit le G-code envoyé à LinuxCNC. Sur cette PrintNC, FreeCAD (avec l'atelier Path) est utilisé.
+
+## Défocus
+
+Distance dont on éloigne le bec laser de sa distance focale, pour élargir volontairement le point. Sert à noircir une surface : au foyer, il faudrait des centaines de passes serrées. Le point s'élargit selon un cône de divergence calibré sur **deux mesures réelles** (diamètre au foyer, diamètre à une hauteur connue).
 
 ## Capteur inductif
 Capteur de proximité sans contact (ici LJ8A3-2-Z/AX) utilisé pour les fins de course. Il détecte la présence d'un métal à proximité. Configuré en NPN NC (Normalement Fermé, logique active basse).
@@ -32,6 +40,10 @@ Référence du driver utilisé sur cette PrintNC (CL57T v4.1, omc-stepperonline)
 ## Driver (Pilote de moteur)
 Composant électronique qui convertit les signaux de pas/direction (provenant de la carte FlexiHAL) en courant suffisant pour faire tourner les moteurs pas à pas. Ici, des CL57T v4.1 en boucle fermée.
 
+## Dialecte G-code
+
+Variante du langage attendue par le contrôleur. LaserAtelier en génère trois : **LinuxCNC** (sélecteur de broche `$1`, `G64`, table d'outils), **GRBL 1.1** (armement `M4` en mode laser, lissage natif) et **grblHAL**. Le réglage est mémorisé par profil laser.
+
 ## Encodeur
 Capteur magnétique ou optique fixé sur l'arbre du moteur qui mesure la rotation réelle. Permet le fonctionnement en boucle fermée. Sur cette PrintNC, chaque moteur Nema 23 dispose d'un encodeur magnétique 1000 PPR (4000 CPR en quadrature). Le driver CL57T lit l'encodeur et peut détecter une perte de pas.
 
@@ -40,6 +52,14 @@ Système de serrage d'outil à cône élastique. "ER" = système standardisé, "
 
 ## Équerrage (Squaring)
 Réglage visant à rendre les axes X et Y parfaitement perpendiculaires (à 90°). Réalisé avant le serrage définitif des vis de structure, souvent via la méthode du triangle 3-4-5 ou des pins.
+
+## Fluence
+
+Énergie déposée par unité de surface — en pratique `S / (espacement × vitesse)`. C'est elle qui gouverne la teinte, **pas la puissance seule** : un trait deux fois plus large reçoit deux fois moins d'énergie par millimètre carré à puissance égale. À nuancer toutefois : à fluence rigoureusement identique, un passage plus lent grave plus foncé — le temps de séjour compte aussi.
+
+## Foyer (distance focale)
+
+Hauteur du bec où le point laser est le plus fin. Se mesure en gravant une rampe de traits à hauteurs croissantes : le plus fin donne le foyer. Sur ce laser, ~8 mm sous le nez.
 
 ## FlexiHAL
 Carte de contrôle CNC conçue par Expatria, exécutant le firmware Remora. Communique avec le Raspberry Pi par bus SPI et génère les impulsions des moteurs en matériel.
@@ -52,6 +72,10 @@ Logiciel open source de CAO (Conception Assistée par Ordinateur) et CAM. Utilis
 ## G-code
 Langage de programmation numérique standard utilisé pour piloter les machines CNC (ex: `G0 X10 Y20` pour un déplacement rapide, `M3 S12000` pour lancer la broche à 12000 tr/min).
 
+## Homographie (redressement de photo)
+
+Transformation qui corrige la **perspective** d'une photo, et pas seulement son échelle. Une photo tenue à la main n'est jamais perpendiculaire au bois ; quatre repères en croix gravés aux coins d'un rectangle de cotes connues fournissent les quatre correspondances nécessaires. Le résultat est une image où 1 mm vaut un nombre exact de pixels, partout.
+
 ## G54 (Système de coordonnées pièce)
 L'un des systèmes de coordonnées de travail (WCS) de LinuxCNC. Définit le zéro pièce par rapport à l'origine machine. Activé par défaut au démarrage. Le "touch off" définit ce zéro. G53 permet de se déplacer en coordonnées machine absolues, indépendamment de G54.
 
@@ -60,6 +84,10 @@ Firmware open source pour machines CNC, dérivé de GRBL. La FlexiHAL supporte �
 
 ## HAL (Hardware Abstraction Layer)
 Système propre à LinuxCNC. C'est un langage de câblage logique (fichiers `.hal`) qui permet de connecter les signaux physiques (boutons, capteurs) aux fonctions logicielles (mouvements, pauses) via des composants comme `and2`, `or2` ou `not`.
+
+## Kerf (saignée)
+
+Largeur de matière effectivement enlevée par le faisceau lors d'une découpe. Une pièce découpée sans compensation de kerf est trop petite de la moitié de cette largeur sur chaque bord.
 
 ## HGR20 / HGW20CC
 Rail linéaire de guidage de type HIWIN (ou copie). "HGR20" = référence du rail (largeur 20 mm), "HGW20CC" = référence du chariot (patin) qui glisse dessus, modèle large à bride. Utilisés sur les trois axes de la PrintNC.
@@ -77,6 +105,22 @@ Logiciel open source de contrôle CNC tournant sur Linux temps-réel (PREEMPT_RT
 
 ## MDI (Manual Data Input)
 Mode de LinuxCNC permettant d'entrer et d'exécuter des commandes G-code manuellement, une ligne à la fois, sans charger de fichier programme. Utile pour les déplacements ponctuels ou les tests.
+
+## M67 (puissance synchronisée)
+
+Commande LinuxCNC qui programme une sortie analogique **synchronisée avec le mouvement**, au lieu de l'appliquer immédiatement. Sur cette machine, un `S` isolé entre deux `G1` vide la file d'attente et arrête le mouvement ; `M67 E0 Q…` l'évite. Mesuré sur bois : le gain de temps réel n'est que de 2 %.
+
+## Micro-trait
+
+Point gravé sous forme d'un `G1` très court plutôt que d'une pause faisceau allumé. Indispensable ici : la puissance étant asservie à la vitesse réelle, elle tombe à zéro à l'arrêt — un point fait au `G4` ne grave donc **rien du tout**.
+
+## Mire de mesure
+
+Réglette graduée au millimètre et quatre repères en croix, **gravés en même temps que la planche** de calibration, donc dans le même repère machine. Gravée et non posée : une règle d'acier repose 0,5 à 1 mm au-dessus de la surface, donc vue sous un autre angle que le trait qu'on mesure — parallaxe. Les cotes du rectangle sont gravées sur le bois, ainsi que le nom du laser.
+
+## Nuancier
+
+Table des teintes réellement obtenues, gravée puis jugée à l'œil, pour un matériau et un laser donnés. Sert à convertir une noirceur demandée en couple puissance/vitesse. Un nuancier riche n'est pas une garantie : seuls comptent les tons portant **à la fois** une noirceur jugée et une largeur mesurée.
 
 ## Modbus RTU
 Protocole de communication industriel standard sur liaison RS485. Le VFD Huanyang de cette machine utilise HYComm, qui ressemble à Modbus RTU mais n'est pas compatible avec lui.
@@ -132,6 +176,10 @@ Générateur de pas (composant LinuxCNC/HAL). Il génère la fréquence exacte d
 Opération d'usinage consistant à passer la fraise sur toute la surface d'une pièce pour obtenir une surface plane et de référence. Sur cette PrintNC, utilisé pour mettre la table à niveau et préparer les pièces en aluminium.
 
 # T - V
+
+## Tramage
+
+Manière de fabriquer un gris avec un outil qui ne sait faire que brûlé ou pas brûlé : par densité de points, par taille de point, par surface (similigravure) ou par épaisseur de trait. LaserAtelier en propose sept, chacun avec son régime de vitesse et de défocus.
 
 ## Tandem Y
 Configuration mécanique où l'axe Y est entraîné par deux moteurs distincts (Y1 et Y2), un de chaque côté du portique. Cela évite les problèmes de désynchronisation des courroies ou des arbres de liaison.

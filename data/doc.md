@@ -669,11 +669,18 @@ M5 $1           ; fin : coupe réellement le faisceau
 ## Génération des G-codes : LaserAtelier (FreeCAD)
 Les G-codes laser sont générés par **LaserAtelier**, un atelier FreeCAD maison — [documentation complète](https://laser.atelierduverdier.fr) · [code source](https://github.com/atelierduverdier/LaserAtelier). Modes disponibles :
 
+- **Photo (7 tramages)** : convertit une image en gravure. Diffusion (Floyd-Steinberg), Durée variable, Lignes calibrées (nuancier), Diffusion en lignes, Gros points Z, **Similigravure** (trame 45° façon journal : le gris est une *surface*) et **Lignes gravées** (un trait continu dont l'*épaisseur* fait le gris). Les deux derniers gravent au foyer et ne demandent aucune calibration de teinte. Aperçu réaliste par tramage, et mire de comparaison des sept sur chute.
 - **Gravure remplie (noir)** : grave un texte/forme en noir plein — remplissage par hachures en défocus (point élargi, rentré du rayon de point pour rester dans le bord, liseré de fermeture) puis contour repassé net au foyer, épaisseur de trait réglable.
+- **Importer un dessin SVG** : lit le `.svg` directement et crée **un objet par tracé d'origine**, sélectionnable séparément — sans le détour par le DXF, qui émiettait un dessin de 23 tracés en plus de 210 fragments.
+- **Texte (trait simple)** : police mono-trait (Hershey, domaine public), chaque lettre dessinée d'un seul trait par branche, comme un traceur à plume.
 - **Hachures 2D**, **Marquage sur surface courbe** (suit le relief d'un modèle 3D), **Projection sur surface 3D**.
 - **Découpe multi-passes**, à plat ou sur surface courbée (compensation de kerf, passes progressives, rampe de puissance).
+- **Nuancier** (table des teintes jugées à l'œil) et **Assistant matériau** (caractérise un matériau du début à la fin).
+- **Planches de calibration 1, 2, 2b et 3** : largeurs au foyer, en défocus (15/36 mm), en défocus profond (40/55/60 mm) et largeur du point. Chacune porte une **mire gravée** — réglette au millimètre, quatre repères en croix, cotes et nom du laser gravés sur le bois. Générables en un seul fichier.
 - **Grille de test puissance/vitesse** et **Bande de calibration défocus** : deux mires de réglage gravées en un seul job (voir Calibrations).
 - **Job combiné** (plusieurs opérations, un seul armement) et **fichier de cadrage** (tracé de l'enveloppe, laser éteint ou faisceau de visée à très faible puissance, à lancer avant le vrai job pour vérifier le positionnement).
+
+**Mesurer sur photo plutôt qu'au pied à coulisse.** Les planches portant une mire, une photo prise à main levée peut être **redressée** (perspective corrigée par homographie sur les quatre croix) à une échelle exacte, puis posée telle quelle dans le document FreeCAD à sa taille en millimètres. On mesure alors à l'écran, en zoomant — c'est l'utilisateur qui décide où s'arrête la brûlure, ce qu'aucun seuil automatique ne sait faire à sa place. L'atelier vérifie ensuite l'échelle sur le **pas de la réglette gravée**, mesure indépendante des quatre croix : au-delà de 1,5 % d'écart, le fichier est refusé.
 
 Les fichiers produits respectent les conventions de la machine : `G43 H100` en en-tête (compensation d'outil — prérequis : `T100 M6` fait dans la session), armement unique `M3 $1` en début de job, puissance par segment `S… $1`, `S0 $1` sur les rapides et `M5 $1` final. Le Z de travail est calé sur la distance focale (~8,5 mm sous le nez sur ce laser) : la mesurer d'abord (voir Calibrations) avant de générer.
 

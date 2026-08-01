@@ -1,3 +1,65 @@
+# 1er août 2026 — LaserAtelier v1.1 → v2.31 : la photo, la mesure, et dix jours à se faire contredire par le bois
+
+Dix jours de travail intense sur [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) ([doc complète](https://laser.atelierduverdier.fr)), passé de la **v1.1.0** à la **v2.31.1**. Plutôt qu'une liste de versions, voici ce qui a changé — et surtout ce que le bois a démenti en chemin.
+
+## Graver une photo : sept façons de faire du gris
+
+Un laser ne sait faire que du brûlé ou du bois nu. Tout le gris est une illusion, et il y a plusieurs manières de la fabriquer. Le mode **Photo** en propose désormais sept, avec aperçu réaliste de chacune :
+
+- **Diffusion (Floyd-Steinberg)** et **Diffusion en lignes** — la densité de points identiques fait le gris ;
+- **Durée variable** et **Gros points Z** — c'est la taille du point qui varie, par le temps d'exposition ou par la hauteur du bec ;
+- **Lignes calibrées (nuancier)** — la puissance est modulée pixel par pixel, à partir d'un nuancier réellement gravé et jugé à l'œil ;
+- **Similigravure** — une trame à 45° façon journal : chaque point brûle à fond, c'est sa *surface* qui porte le ton. Aucune calibration nécessaire ;
+- **Lignes gravées** — un trait continu dont l'*épaisseur* fait le gris, lu dans la table des largeurs brûlées. Aucun bois nu, aucune calibration de teinte.
+
+Les deux derniers gravent **au foyer** et rendent le gris par une géométrie, jamais en demandant au bois de produire une teinte. C'est le chemin qui a fini par gagner.
+
+## La leçon la plus coûteuse : la noirceur n'est pas une affaire d'énergie
+
+Quatre bandes gravées à énergie rigoureusement identique par millimètre — S ajusté avec F pour que le rapport reste constant — sont ressorties **visiblement différentes**. Plus lent = plus foncé. Le temps de séjour compte, et aucune formule fondée sur la seule fluence ne pouvait le rattraper.
+
+Corollaire désagréable : une courbe de noirceur bâtie sur des tons mesurés à des vitesses différentes est incohérente par construction. Le panneau vérifie maintenant les deux axes du régime — défocus **et** vitesse — et propose la correction d'un clic.
+
+## Au-delà de 92 %, on creuse sans noircir
+
+Deux mesures indépendantes le disent. D'abord deux portraits jumeaux, même image, l'un à 100 % et l'autre plafonné à S900 : noirceur globale identique (0,710 contre 0,702), mais les **noirs profonds plus denses** au plafond. Ensuite une planche de dix pavés classés à l'œil, où S925 a été jugé plus foncé que S950, S975 et S1000.
+
+Conclusion retenue sur hêtre à F800 : **plafond à 92 %**. Au-dessus, le trait se creuse et la surface ressort striée — et la table des largeurs, qui ne connaît que la largeur, ne pouvait pas le prédire.
+
+## Mesurer sur photo, au centième
+
+Le vrai goulot d'étranglement n'était pas le calcul mais la mesure : lire au pied à coulisse une brûlure de 0,10 mm, des dizaines de fois. La chaîne a été refaite de bout en bout.
+
+Chaque planche de calibration porte maintenant une **mire gravée** — une réglette au millimètre et quatre repères en croix — gravée *en même temps* que la planche, donc dans le même repère machine. Une photo tenue à la main n'est jamais perpendiculaire, et FreeCAD ne sait pas corriger une perspective ; les quatre croix donnent l'homographie complète. Un outil OpenCV redresse la photo à une échelle exacte, la range et la **pose directement dans le document à sa taille en millimètres**. Il ne reste qu'à mesurer à l'écran, en zoomant.
+
+Résultat mesuré sur une planche réelle : échelle juste à **0,00 %**, uniforme d'un bord à l'autre à 0,51 %, dispersion 0,013 mm.
+
+**Et la planche se vérifie elle-même.** Après redressement, l'outil mesure le pas de la réglette gravée et le compare à l'échelle annoncée. Cette mesure n'entre pas dans le calcul : elle est indépendante, donc elle contrôle vraiment quelque chose. Au-delà de 1,5 % d'écart, le fichier n'est même pas écrit. Ce garde-fou est né d'un défaut réel — une cote saisie de travers avait produit une image 6 % trop large et 23 % trop haute, sans le moindre avertissement.
+
+## La planche porte son identité
+
+Une planche vit des années, un fichier est réécrit à chaque évolution. Deux jours après avoir gravé les planches, la mise en page avait changé et le `.ngc` régénéré ne décrivait plus le bois posé sur l'établi — une cote périmée donne une échelle fausse **en silence**.
+
+D'où : les **cotes de la mire sont gravées sur la planche**, et depuis peu le **nom du laser** aussi. Ce n'est pas de l'étiquetage : une largeur brûlée n'a de valeur que pour le module qui l'a produite, et à l'inverse, quelqu'un possédant le même laser peut reprendre ces mesures sans refaire une heure d'établi.
+
+## Import SVG natif
+
+Le détour par le DXF émiettait un dessin de 23 tracés en **plus de 210 fragments**. Un parseur SVG maison lit le fichier directement et crée **un objet par tracé d'origine**, sélectionnable séparément, avec sa couleur de remplissage reportée pour les distinguer à l'œil.
+
+## Deux gains de temps machine, dont un décevant
+
+**Ordonnancement des trajets** : sur un crâne gravé de 9 268 chaînes, les déplacements à vide sont passés de **56 m à 5,1 m** (−91 %), pour une longueur gravée identique au millimètre près.
+
+**M67 (puissance synchronisée au mouvement)** : sur cette machine, un `S` isolé entre deux `G1` vide la file d'attente et arrête le mouvement — prouvé par deux fichiers jumeaux. `M67 E0 Q…` est censé l'éviter. Implémenté, puis mesuré sur bois : **+2 % seulement** sur 64 869 changements de puissance. Honnête à dire : le gain espéré n'était pas là.
+
+## Ce que les tests ne peuvent pas voir
+
+Presque tous les défauts corrigés ces dix jours ont été trouvés **en regardant le bois, ou en écoutant la tête bouger** — jamais par un test. Un aller-retour inutile dans les trames de points a été entendu à l'oreille avant d'être mesuré, et il avait survécu un mois entier à sa propre correction, dans un générateur voisin.
+
+Deux exemples parmi d'autres : un verrou « ne pas modifier les résultats » bloquait le clavier mais pas l'outil de mesure, qui écrasait donc sans un mot une valeur protégée ; et une grille de saisie affichait un tableau entièrement vide, né d'une mesure qu'elle ne savait pas montrer.
+
+**☕ LaserAtelier vous est utile ?** Vous pouvez soutenir son développement sur [ko-fi.com/atelierduverdier](https://ko-fi.com/atelierduverdier).
+
 # 22 juillet 2026 — LaserAtelier passe en v1.1.0 : dialectes GRBL/grblHAL, largeurs brûlées mesurées
 
 [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) est taggé **v1.1.0** ([doc complète](https://laser.atelierduverdier.fr)), sous licence LGPL-2.1-or-later. Au menu de cette version :
