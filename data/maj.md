@@ -1,3 +1,31 @@
+# 2 août 2026 — LaserAtelier v2.31 → v2.44 : lire le bois sur photo
+
+Suite (et fin de chapitre) du chantier mesure de [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) ([doc](https://laser.atelierduverdier.fr)). L'objectif de ces deux jours : que la planche gravée se lise **toute seule** sur une photo — largeurs de traits comme nuances de gris — au lieu de se mesurer case par case au pied à coulisse ou de se juger à l'œil.
+
+## Un tableau inventé est pire qu'un tableau vide
+
+En remesurant la planche du foyer avec le nouvel outil, comparaison faite avec la sauvegarde du matin : trois colonnes de l'ancienne table étaient **identiques**, 0,10 à 0,30 mm par pas de 0,05 exactement. Un pied à coulisse ne produit pas trois rampes parfaites. Cette partie de la table n'avait jamais été mesurée — et deux recettes photo bâties dessus laissaient 40 % de bois nu entre leurs lignes : elles gravaient des rayures. Vide, une table refuse et renvoie à l'établi ; inventée, elle répond, de façon plausible, pour toujours.
+
+## Le bois a tranché : F200 carbonise, F1000 noircit
+
+Le même dégradé gravé deux fois côte à côte. Le régime que le raisonnement désignait comme « le plus sûr » (F200, la plus grosse marge au-dessus du plancher de *mesure*) est sorti **carbonisé** ; F1000 est sorti **noir franc**, deux fois plus vite. Une marge de mesure n'est pas une marge de gravure : un trait large à basse vitesse est large surtout parce que le temps de pose est long, et c'est ce temps qui brûle. L'indice d'énergie qui le prédisait existait déjà — il n'était affiché nulle part sur ce tramage. Il l'est désormais, avec les deux repères gravés cités dans le message : 2,8× = noir franc, 5,7× = carbonisé.
+
+## La noirceur se lit d'un coup, sur toute la grille
+
+La Grille de test peut graver sa **mire** (croix, réglette, et maintenant le **régime** : `FOYER` ou `DEFOCUS 15.34 PT1.18` — le fichier ne suit pas le bois, c'est le bois qui survit). Une **fiche** déposée à côté du G-code donne la position de chaque case dans le repère de la mire. La photo redressée se lit alors d'un coup : le gris moyen de chaque case, converti en noirceur **relative** entre deux repères pris dans la même photo — un bout de bois nu, la case la plus noire — donc insensible à l'éclairage. Les deux repères sont proposés, dessinés, et se déplacent à la souris : une ancre posée sur un reflet décalerait tout le nuancier en rendant des pourcentages parfaitement crédibles.
+
+Le **plancher de bruit** n'est pas choisi, il est mesuré : les écarts entre cases sont du bois intact, leur dispersion donne le grain (0 à 9,8 % sur la planche d'essai). Une case qui se lit sous ce bruit n'est pas un ton clair, elle est vide — vérifié sur le bois : les dix cases rejetées par le calcul sont exactement les dix vues vides à l'œil. Les tons versés au nuancier emportent leur **régime** (défocus, pas), sans quoi deux familles se mélangeraient dans une même courbe sans que rien ne le signale.
+
+## Les traits ne s'encadrent plus, ils se valident
+
+La mesure des largeurs à la ligne (deux lignes posées sur le profil moyenné du trait — l'incertitude divisée par ~7) gagne le **cadrage automatique** : la mise en page des planches est rejouée depuis le code qui les a gravées, et le rectangle de lecture se pose tout seul sur le bon trait, y compris sur les planches défocus où le même couple puissance/vitesse existe à chaque niveau. Il ne reste qu'à juger où s'arrête la brûlure, et valider. Un bouton « pas de valeur » écarte une case illisible — distincte d'un trait vierge, qui est une mesure (zéro : le seuil du matériau).
+
+## Ce que l'utilisateur a trouvé et qu'aucun test n'a vu
+
+La série continue, et elle mérite d'être dite : un bouton Générer cassé au premier clic, trois aperçus qui décrivaient une planche plus petite que celle qui allait sortir, des réglages neufs nés derrière des sections repliées, un accordéon qui refermait la section portant l'action principale, une réglette « volée » par les hachures de la grille (une voix d'écart entre 111 et 112 transitions), une fenêtre qui restait noire sans un mot. Tous trouvés en se servant du logiciel, aucun par un test — les tests sont venus après, pour que chacun ne revienne pas.
+
+Et un panneau qui mettait 14 secondes à s'ouvrir, ventilateur hurlant : ~26 000 relectures du même fichier JSON par ouverture. 0,12 s après correctif. C'est l'oreille qui l'a trouvé.
+
 # 1er août 2026 — LaserAtelier v1.1 → v2.31 : la photo, la mesure, et dix jours à se faire contredire par le bois
 
 Dix jours de travail intense sur [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) ([doc complète](https://laser.atelierduverdier.fr)), passé de la **v1.1.0** à la **v2.31.1**. Plutôt qu'une liste de versions, voici ce qui a changé — et surtout ce que le bois a démenti en chemin.
