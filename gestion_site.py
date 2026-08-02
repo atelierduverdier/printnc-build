@@ -44,7 +44,7 @@ from PySide6.QtWidgets import (
     QFileDialog, QMessageBox, QListWidget, QListWidgetItem, QStackedWidget,
     QFrame, QProgressBar, QStatusBar, QCheckBox, QTableWidget,
     QTableWidgetItem, QHeaderView, QScrollArea, QSplitter, QSlider, QDialog,
-    QDialogButtonBox
+    QDialogButtonBox, QInputDialog
 )
 # Aperçu intégré optionnel : WebEngine peut manquer (paquet séparé sur Arch :
 # python-pyside6-WebEngine). Import protégé => repli sur ouverture navigateur.
@@ -774,6 +774,12 @@ class VideoPage(QWidget):
         self.video_path = None
         self.thumb_seconds = 1.0      # instant de la vignette, reglable
         self.video_duration = None    # duree en secondes (via ffprobe)
+        # File d'attente de la session : chaque « Ajouter » y empile la
+        # video (archive + miniature + ligne CSV faites tout de suite), et
+        # la regeneration du site -- l'etape longue -- ne tourne qu'UNE
+        # fois, au « Terminer ». Demande du 02/08/2026 : « pouvoir en
+        # mettre plusieurs et cliquer commit a la fin ».
+        self.pending = []
         self._build()
 
     def _build(self):
@@ -783,9 +789,10 @@ class VideoPage(QWidget):
 
         t = QLabel("Ajouter une video")
         t.setObjectName('pageTitle')
-        s = QLabel("Ajoute un reel en une seule operation : archive de la "
-                   "source, miniature (ffmpeg), ligne dans le CSV, puis "
-                   "regeneration du site.")
+        s = QLabel("Ajoute un ou PLUSIEURS reels : chaque ajout archive la "
+                   "source, fait la miniature (ffmpeg) et ecrit la ligne CSV. "
+                   "La regeneration du site et le commit ne tournent qu'une "
+                   "fois, au bouton « Terminer ».")
         s.setObjectName('pageSub')
         s.setWordWrap(True)
         root.addWidget(t)
@@ -871,15 +878,29 @@ class VideoPage(QWidget):
         c2.addWidget(self.chk_jalon)
 
         # 3. Action
-        c3 = section_card(root, "3. Ajouter")
+        c3 = section_card(root, "3. Ajouter, puis terminer")
         self.lbl_status = QLabel("")
         self.lbl_status.setObjectName('muted')
         self.lbl_status.setWordWrap(True)
         c3.addWidget(self.lbl_status)
-        self.btn_add = QPushButton("➕  Ajouter et regenerer")
-        self.btn_add.setObjectName('primary')
+        self.list_pending = QListWidget()
+        self.list_pending.setMaximumHeight(110)
+        self.list_pending.setVisible(False)   # n'apparait qu'avec du contenu
+        c3.addWidget(self.list_pending)
+        row3 = QHBoxLayout()
+        self.btn_add = QPushButton("➕  Ajouter a la liste")
         self.btn_add.clicked.connect(self.do_add)
-        c3.addWidget(self.btn_add)
+        row3.addWidget(self.btn_add)
+        self.btn_finish = QPushButton("✓  Terminer : regenerer + commit…")
+        self.btn_finish.setObjectName('primary')
+        self.btn_finish.setEnabled(False)
+        self.btn_finish.setToolTip(
+            "Regenere le site UNE fois pour toutes les videos de la liste,\n"
+            "puis git add + commit (message propose, modifiable) + push\n"
+            "apres un pull --rebase -- le meme enchainement que la page Git.")
+        self.btn_finish.clicked.connect(self.do_finish)
+        row3.addWidget(self.btn_finish)
+        c3.addLayout(row3)
 
         root.addStretch(1)
         self._update_add_state()
@@ -978,6 +999,7 @@ class VideoPage(QWidget):
     def _update_add_state(self):
         ok = bool(self.video_path) and os.path.exists(self.video_path or '')
         self.btn_add.setEnabled(ok and not self.runner.busy)
+        self.btn_finish.setEnabled(bool(self.pending) and not self.runner.busy)
 
     def do_add(self):
         if not self.video_path or not os.path.exists(self.video_path):
@@ -1058,13 +1080,22 @@ class VideoPage(QWidget):
             _r.console.append(f"Ligne ajoutee dans {CSV_REL}", 'title')
         self.runner.then(_add_csv, title="Ajout dans videos.csv")
 
-        # 4) regeneration du site
-        self.runner.cmd('python3', [GEN_SCRIPT], cwd=KIT_DIR,
-                        title="Regeneration du site")
-
-        # 5) fin : reinit UI + rafraichir
+        # 4) fin : empiler dans la file, reinit UI -- PAS de regeneration
+        # ici. Elle tournait apres CHAQUE video (l'etape longue), alors
+        # qu'elle produit le meme site qu'on l'appelle une ou dix fois :
+        # elle ne tourne plus qu'au « Terminer ».
         def _done(_r):
-            self.lbl_status.setText("✓ Video ajoutee et site regenere.")
+            self.pending.append((date, nom_fichier, texte))
+            self.list_pending.addItem(
+                f"{date} — {nom_fichier} — {texte[:48]}")
+            self.list_pending.setVisible(True)
+            n = len(self.pending)
+            self.lbl_status.setText(
+                f"✓ {n} video(s) en attente : ligne(s) CSV ecrite(s), "
+                "miniature(s) faite(s). Le site n'est PAS regenere -- "
+                "clique « Terminer » quand la liste est complete.")
+            self.btn_finish.setText(
+                f"✓  Terminer : regenerer + commit ({n})")
             self.video_path = None
             self.edit_file.clear()
             self.preview_lbl.clear()
@@ -1075,7 +1106,49 @@ class VideoPage(QWidget):
             self.slider_seek.setEnabled(False)
             self.btn_refresh_preview.setEnabled(False)
             self._update_add_state()
-        self.runner.then(_done, title="Termine")
+        self.runner.then(_done, title="Video en file")
+
+    def do_finish(self):
+        """Regeneration UNIQUE puis commit/push, pour toute la file.
+
+        Le message est propose mais modifiable, et l'annulation du dialogue
+        n'annule que le commit : les lignes CSV sont deja ecrites, on peut
+        toujours regenerer/committer plus tard (page Git)."""
+        if not self.pending:
+            return
+        n = len(self.pending)
+        defaut = (f"Ajout de {n} videos" if n > 1
+                  else f"Ajout video : {self.pending[0][1]}")
+        msg, ok = QInputDialog.getText(
+            self, "Terminer — message du commit",
+            f"{n} video(s) en file. Le site va etre regenere puis commite\n"
+            "et pousse (pull --rebase d'abord, comme la page Git).\n\n"
+            "Message du commit :", text=defaut)
+        if not ok or not msg.strip():
+            self.lbl_status.setText(
+                "Termine sans commit : le site n'est pas regenere. La file "
+                "reste pleine, « Terminer » est toujours la.")
+            return
+        self.runner.cmd('python3', [GEN_SCRIPT], cwd=KIT_DIR,
+                        title=f"Regeneration du site ({n} video(s))")
+        self.runner.cmd('git', ['add', '-A'], cwd=KIT_DIR, title="git add -A")
+        self.runner.cmd('git', ['commit', '-m', msg.strip()], cwd=KIT_DIR,
+                        title=f"git commit : {msg.strip()}")
+        env = QProcessEnvironment.systemEnvironment()
+        env.insert('GIT_TERMINAL_PROMPT', '0')
+        self.runner.cmd('git', ['pull', '--rebase'], cwd=KIT_DIR,
+                        title="git pull --rebase (synchro avant push)",
+                        env=env, halt_on_error=True)
+        self.runner.cmd('git', ['push'], cwd=KIT_DIR, title="git push", env=env)
+
+        def _fini(_r):
+            self.pending.clear()
+            self.list_pending.clear()
+            self.list_pending.setVisible(False)
+            self.btn_finish.setText("✓  Terminer : regenerer + commit…")
+            self.btn_finish.setEnabled(False)
+            self.lbl_status.setText("✓ Site regenere, commite et pousse.")
+        self.runner.then(_fini, title="Termine")
 
     # ---- Drag & drop d'un fichier video sur la page ----
     def dragEnterEvent(self, event: QDragEnterEvent):
@@ -1560,7 +1633,13 @@ class DonneesPage(QWidget):
         self.runner.then(lambda _r: self.refresh_table())
 
     def refresh_table(self):
-        vids = lire_videos()[:200]  # limiter l'apercu
+        # TOUT le CSV, plus recentes EN TETE. L'apercu etait plafonne a 200
+        # lignes sur un fichier qui en avait 270 : les ~70 videos les plus
+        # recentes -- celles qu'on veut justement modifier -- n'apparaissaient
+        # pas du tout, et la liste semblait incomplete (signale le
+        # 02/08/2026). 270 lignes ne coutent rien a un QTableWidget ; le
+        # plafond protegeait un probleme qui n'existe pas.
+        vids = list(reversed(lire_videos()))
         self.table.setRowCount(len(vids))
         for i, v in enumerate(vids):
             vals = [v.get('date', ''), v.get('phase', ''), v.get('fichier', ''),
@@ -1574,7 +1653,8 @@ class DonneesPage(QWidget):
     def _selected_video_key(self):
         """Retourne la cle (date, fichier) de la video selectionnee dans
         la table, ou None si aucune selection. On identifie par cle plutot
-        que par rang car la table est plafonnee a 200 lignes."""
+        que par rang : la table est affichee plus recentes en tete, dans
+        l'ordre INVERSE du CSV."""
         row = self.table.currentRow()
         if row < 0:
             return None
