@@ -69,6 +69,10 @@ Logiciel open source de CAO (Conception Assistée par Ordinateur) et CAM. Utilis
 
 # G - H - L
 
+## Fuseau (largeur portée par la hauteur)
+
+Trait dont l'épaisseur varie **continûment** parce que la tête monte et descend : plus le bec s'éloigne du foyer, plus le point s'élargit. C'est ce qui permet à un laser de faire des pleins et des déliés sans repasser ni remplir. L'alternative — moduler la **puissance** — ne donne qu'une valeur par palier mesuré, donc des marches visibles dès que le pas est large. Le prix du fuseau est la **course** : sur hêtre, aller de 0,18 à 3,43 mm demande une cinquantaine de millimètres de Z, et l'axe a une vitesse limite, donc un geste trop court ne montrera pas le fuseau entier.
+
 ## G-code
 Langage de programmation numérique standard utilisé pour piloter les machines CNC (ex: `G0 X10 Y20` pour un déplacement rapide, `M3 S12000` pour lancer la broche à 12000 tr/min).
 
@@ -114,6 +118,10 @@ Commande LinuxCNC qui programme une sortie analogique **synchronisée avec le mo
 
 Point gravé sous forme d'un `G1` très court plutôt que d'une pause faisceau allumé. Indispensable ici : la puissance étant asservie à la vitesse réelle, elle tombe à zéro à l'arrêt — un point fait au `G4` ne grave donc **rien du tout**.
 
+## Mono-trait (police)
+
+Police dont chaque lettre est dessinée d'**un seul trait par branche**, comme un traceur à plume — par opposition à une police ordinaire, qui est un **contour rempli**. Une police ordinaire gravée telle quelle fait donc le tour de chaque lettre ; une mono-trait l'écrit. Elle ne porte en revanche aucune épaisseur : c'est un squelette, et les pleins et déliés doivent y être **calculés** (voir Plume) plutôt qu'extraits.
+
 ## Mire de mesure
 
 Réglette graduée au millimètre et quatre repères en croix, **gravés en même temps que la planche** de calibration, donc dans le même repère machine. Gravée et non posée : une règle d'acier repose 0,5 à 1 mm au-dessus de la surface, donc vue sous un autre angle que le trait qu'on mesure — parallaxe. Les cotes du rectangle sont gravées sur le bois, ainsi que le nom du laser.
@@ -130,6 +138,18 @@ Standard de taille définissant l'interface de fixation d'un moteur pas à pas (
 
 ## Palpeur (Tool Setter)
 Dispositif de mesure fixe monté sur la table de la machine. Lors d'un changement d'outil, la broche descend lentement, touche le palpeur, et LinuxCNC calcule la longueur exacte du nouvel outil par différence.
+
+## Pleins et déliés
+
+L'alternance d'épaisseur qui fait une écriture calligraphique : le **plein** est le trait large, le **délié** le trait fin. Sur une machine, l'épaisseur ne vient ni de l'encre ni de l'appui mais de la **hauteur du bec** (voir Fuseau). Deux sources possibles : les **extraire** d'une police calligraphique — le squelette et la largeur locale se lisent dans le dessin de la lettre — ou les **calculer** sur une police mono-trait, à partir de la direction de chaque trait (voir Plume).
+
+## Plume (bec plat, plume pointue)
+
+Les deux instruments de la calligraphie, et ils ne font pas la même chose.
+
+Le **bec plat** (italique, gothique, onciale) est une lame de largeur fixe tenue à un angle fixe : l'épaisseur ne dépend que de la **direction** du trait — celui qui traverse la lame est plein, celui qui court dans son axe est délié. Un trait qui monte y est aussi plein que le même qui descend.
+
+La **plume pointue** (anglaise, et toutes les cursives) est une pointe souple qui s'écarte sous la **pression**, et on n'appuie qu'en **descendant** : pousser une pointe vers le haut l'accroche dans le papier. D'où les pleins sur les descentes et les déliés filiformes partout ailleurs. Prendre un bec plat sur une cursive met des pleins dans les remontées, là où aucune main n'en met — ça se voit tout de suite sans qu'on sache dire pourquoi.
 
 ## Portique (Gantry)
 Structure en pont mobile portant l'axe X et la broche. Sur une PrintNC, le portique se déplace sur l'axe Y via deux rails linéaires et deux vis à billes (configuration Tandem Y).

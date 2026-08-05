@@ -1,3 +1,81 @@
+# 5 août 2026 — LaserAtelier v2.44 → v2.80 : écrire à la plume, et se faire démentir par le sapin
+
+Trois semaines sur [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) ([doc complète](https://laser.atelierduverdier.fr)), de la **v2.44** à la **v2.80.2**. Le fil de ces semaines : faire écrire la machine — calligraphie, polices, pleins et déliés — et, en chemin, se faire contredire trois fois par le bois.
+
+## Le sapin a démenti le hêtre
+
+La planche qui alimente le nuancier gravait les mêmes nombres pour tout le monde : S200 → S1000 à F2000, défocus 15. Des nombres de **hêtre**. Sur du sapin, sept cases sur dix sont sorties **vierges** — une planche entière gravée pour trois tons, dont le plus fort était un pâté.
+
+Le plus gênant : les planches de calibration le disaient **avant** la gravure. Elles offrent les mêmes cases à tous les matériaux, et sur le sapin celles du coin le moins énergique étaient restées vides — non par oubli, mais parce qu'il n'y avait rien à mesurer. Au foyer, S200 s'arrête après F400 quand le hêtre tient jusqu'à F3000. Personne ne lisait ces cases vides.
+
+Et sur hêtre, la même planche gaspillait déjà **trois cases sur dix** : le nuancier de l'atelier en garde la trace, S195 → 0, S235 → 0, S275 → 2. Rien avant ~S300. L'atelier lit désormais les cases vides et en tire deux choses : la vitesse, ramenée dans la plage où ce bois-là a été vu marquer, et le plancher de puissance, pour que la case la plus claire marque encore. Sur un matériau jamais mesuré, rien n'est recalé — et c'est annoncé : cette première planche est un **repérage**, ses cases vierges sont elles aussi une mesure.
+
+## L'avance s'applique au vecteur, pas au trait
+
+Dix-sept pâtés entourés au feutre rouge sur un « Atelier du Verdier » gravé à la plume. Diagnostic proposé : trop de puissance, ou pas assez de vitesse. Les deux, et une seule cause.
+
+En G94, `F` s'applique au **déplacement programmé**, axe Z compris. Là où le fuseau monte à sa pente maximale — c'est-à-dire au début et à la fin de chaque geste — la tête avance en XY **7,57 fois moins vite** qu'annoncé, à faisceau constant. Le bois reçoit l'énergie de 7,57 mm de course étalée sur 1 mm de trait visible.
+
+L'atelier connaissait ce rapport et s'en servait pour la mauvaise question : depuis des semaines il expliquait la **durée** d'un job. Personne ne l'avait relié à la brûlure. Mesuré sur le fichier qui avait produit les pâtés, en énergie par millimètre de trait visible :
+
+| | avant | après |
+|---|---|---|
+| segments au-delà de 2× la médiane | 20,6 % | 0,2 % |
+| segments au-delà de 5× | 7,5 % | 0 % |
+| pire cas | 12,4× | 2,1× |
+| durée du job | 4,6 min | 2,3 min |
+
+Compenser remet aussi la machine dans le régime où la table des largeurs a été mesurée. Ce n'est pas un réglage de goût.
+
+## Écrire, pas graver
+
+Le mode **Calligraphie** lit une vraie police calligraphique (`.otf`/`.ttf`), en extrait le **squelette** — la ligne que la plume a parcourue — et la **largeur locale**, puis confie la largeur à la hauteur Z : la tête se lève pour élargir dans les pleins, redescend pour les déliés. Rien n'est rempli ni repassé.
+
+Il a fallu six versions pour que le geste ressemble à un geste. Le squelette est maintenant parcouru comme un **graphe** : à un croisement on traverse tout droit, comme le ferait une main, au lieu de ramasser les morceaux — 130 gestes deviennent 58 sur une police, 239 deviennent 68 sur une autre. Chaque geste en trop, ce sont deux terminaisons franches, et une terminaison au milieu d'un plein se grave en pâté.
+
+Puis le **sens** : un plein se tire vers le bas, on écrit de gauche à droite. Les gestes sont orientés puis ordonnés — 9 gestes descendants sur 20 sont devenus 20 sur 20, pour moins d'une seconde de trajet à vide en plus sur un job de deux minutes.
+
+Deux modes complètent l'ensemble : **Texte gravé (contour)**, qui trace le pourtour exact des lettres d'une police classique (une police classique n'a pas de plume — son contour *est* son dessin, et en extraire un axe réduit les empattements à de petites barres), et **Texte (trait simple)**, qui compte désormais **45 polices mono-trait**.
+
+## Une police dessinée pour l'atelier
+
+Les quarante-quatre premières sont converties de fontes libres. La quarante-cinquième, **Verdier**, n'est convertie de rien : chaque lettre y est tracée trait par trait dans le script qui la produit. Aucune fonte tierce, donc aucune licence à respecter, et elle porte le **chapeau melon** de l'atelier en glyphe.
+
+Chaque trait y est écrit dans le sens où une main le tracerait — les fûts descendent, les barres vont de gauche à droite. Ça ne se voit pas sur le papier et ça se voit sur la machine.
+
+Quatre relectures **visuelles** ont été nécessaires : on ne juge pas un dessin sur une liste de coordonnées. Treize glyphes ont été redessinés après les avoir regardés rendus, dont l'esperluette, qui a demandé trois essais — en une seule polyligne elle se lit « b ».
+
+## Deux plumes, et ce n'est pas la même chose
+
+Une police mono-trait *est* un squelette : elle ne porte aucune épaisseur. Mais il y reste une information exacte — la **direction** de chaque trait — et c'est tout ce dont une plume a besoin.
+
+- **Bec plat** (italique, gothique) : une lame de largeur fixe, tenue à un angle fixe. L'épaisseur ne dépend que de la direction ; un trait qui monte est aussi plein que le même qui descend.
+- **Plume pointue** (anglaise, toutes les cursives) : une pointe souple qui s'écarte sous la **pression**, et on n'appuie qu'en **descendant** — pousser une pointe vers le haut l'accroche dans le papier.
+
+Le premier jet n'offrait que le bec plat, sur une cursive : il mettait des pleins dans les remontées, là où aucune main n'en met. Ça se voit tout de suite sans qu'on sache dire pourquoi.
+
+Et la première plume était trop timide — 6 % de la hauteur pour le plein, contraste 5:1, verdict d'usage : « c'est une police un peu plus épaisse quoi ». À raison : les polices calligraphiques du commerce demandent 26:1 et 31:1. Le défaut est passé à 16 %, et le réglage qui décide de tout — l'épaisseur — est maintenant à l'écran, avec un schéma qui se redessine à chaque molette.
+
+## Ce que la mesure a refusé
+
+Dernière demande de la série : lisser aussi les largeurs des polices **extraites**, puisque le lissage marchait sur la plume. L'idée se tenait — ces largeurs viennent d'une transformée de distance sur une image tramée, donc quantifiées au pixel.
+
+Branché, puis mesuré : l'ondulation du bord contre le contraste.
+
+| fenêtre de lissage | ondulation | contraste |
+|---|---|---|
+| aucune | 0,0828 | 4,2:1 |
+| étroite | 0,0763 (−8 %) | 3,5:1 (−17 %) |
+| large | 0,0479 (−42 %) | 2,7:1 (−36 %) |
+
+**Chaque fenêtre coûte plus de contraste qu'elle ne gagne en régularité.** Ce n'est donc pas du bruit qu'on peut moyenner : c'est le dessin de la lettre, qui change vite aux empattements et aux raccords. Retiré, et le tableau écrit dans le code à l'endroit exact où le lissage aurait été branché — pour que celui qui y reviendra rouvre ce chiffre-là d'abord.
+
+## Et la documentation disait le contraire du dépôt
+
+Une relecture complète a trouvé, entre autres, deux documents annonçant des polices **commerciales** embarquées dans l'atelier. Elles avaient été écartées à la source dès le premier jour, pour cette raison précise. La doc laissait croire que le dépôt redistribuait des fontes payantes.
+
+Dans la foulée : deux modes complets absents des trois listes d'interface du manuel, deux chapitres sans capture d'écran, un compte de tramages faux, et un numéro de version dans les consignes du dépôt qui avait **44 livraisons** de retard. Le manuel a aussi été coupé en deux : le mode d'emploi d'un côté (−29 %), et un **journal** à part de l'autre — 87 entrées de développement qui s'étaient accumulées au milieu des explications, dont quarante-cinq dans une seule section.
+
 # 2 août 2026 — LaserAtelier v2.31 → v2.44 : lire le bois sur photo
 
 Suite (et fin de chapitre) du chantier mesure de [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) ([doc](https://laser.atelierduverdier.fr)). L'objectif de ces deux jours : que la planche gravée se lise **toute seule** sur une photo — largeurs de traits comme nuances de gris — au lieu de se mesurer case par case au pied à coulisse ou de se juger à l'œil.
