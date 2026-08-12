@@ -61,7 +61,12 @@
   .stat .l{font-size:13px;color:var(--faint);text-transform:uppercase;letter-spacing:1px;}
   .stat-hero .n{color:var(--orange);}
   .stat-hero .l{text-transform:none;letter-spacing:0;color:var(--muted);font-size:14px;font-style:italic;}
-  .nav{position:sticky;top:0;background:rgba(19,17,14,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);z-index:10;}
+  /* Le fond suit le theme. Il valait rgba(19,17,14,.95) -- l'ancienne
+     palette sombre du journal, ECRITE EN DUR : la diffusion de la charte
+     remplace des NOMS de jetons, elle ne peut rien contre une valeur
+     litterale. D'ou une bande noire en travers d'une page devenue claire.
+     Meme forme que la barre du portail, dans kit/verdier.css. */
+  .nav{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);z-index:10;}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 6px;}
   .tabs-mois{display:flex;gap:6px;flex-wrap:wrap;padding:4px 20px 10px;border-top:1px solid var(--line);}
   .tab-mois{font-size:13px;padding:6px 13px;}
@@ -132,8 +137,8 @@
   .maj-desc{font-size:15px;line-height:1.7;color:var(--muted);margin-bottom:12px;}
   .maj-desc a, .doc-important a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
   .maj-desc a:hover, .doc-important a:hover{opacity:.7;}
-  .maj-code{background:#0d0b09;border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-family:'Consolas','Monaco',monospace;font-size:13px;line-height:1.5;color:#d8cfc0;overflow-x:auto;margin:8px 0 16px;white-space:pre;}
-  .maj-desc code{background:#0d0b09;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:monospace;font-size:13px;color:var(--orange);}
+  .maj-code{background:var(--bg-3);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-family:'Consolas','Monaco',monospace;font-size:13px;line-height:1.5;color:var(--fg);overflow-x:auto;margin:8px 0 16px;white-space:pre;}
+  .maj-desc code{background:var(--bg-3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:monospace;font-size:13px;color:var(--orange);}
   .doc-table{width:100%;border-collapse:collapse;margin:10px 0 18px;font-size:14px;}
   .doc-table th{background:var(--surface);color:var(--orange);text-align:left;padding:8px 12px;border:1px solid var(--line);font-weight:600;}
   .doc-table td{padding:8px 12px;border:1px solid var(--line);color:var(--muted);}
@@ -156,7 +161,7 @@
   .doc-liste{margin:6px 0 14px 18px;color:var(--muted);font-size:15px;line-height:1.8;}
   .doc-liste li{margin-bottom:2px;}
   .doc-liste li strong{color:var(--orange);}
-  .doc-liste li code{background:#0d0b09;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:monospace;font-size:13px;color:var(--orange);}
+  .doc-liste li code{background:var(--bg-3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:monospace;font-size:13px;color:var(--orange);}
   .doc-photo{margin:14px 0 20px;text-align:center;}
   .doc-photo img{max-width:100%;max-height:320px;object-fit:cover;border-radius:10px;border:1px solid var(--line);display:block;margin:0 auto;cursor:zoom-in;transition:.2s;}
   .doc-photo img:hover{border-color:var(--orange);opacity:.9;}
