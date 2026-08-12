@@ -364,8 +364,8 @@ convert photo_originale.jpg -resize 1400x -quality 80 photos/nom.jpg
 **2. Creer le dossier et y deposer les photos**
 
 ```bash
-mkdir -p ~/Projets/Site_PrintNC/kit_site/photos
-cp photo.jpg ~/Projets/Site_PrintNC/kit_site/photos/
+mkdir -p ~/Projets/site/Site_PrintNC/kit_site/photos
+cp photo.jpg ~/Projets/site/Site_PrintNC/kit_site/photos/
 ```
 
 **3. Inserer dans `data/doc.md`** a l'endroit voulu :

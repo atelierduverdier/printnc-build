@@ -8,4 +8,4 @@ if [ ! -d "$VENV_DIR" ]; then
     exit 1
 fi
 source "$VENV_DIR/bin/activate"
-exec python3 "/home/christophe/Projets/Site_PrintNC/kit_site/gestion_site.py" "$@"
+exec python3 "/home/christophe/Projets/site/Site_PrintNC/kit_site/gestion_site.py" "$@"
