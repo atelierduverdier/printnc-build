@@ -1,0 +1,54 @@
+/* ENGENDRÉ — ne pas éditer ici.
+   Ce fichier est une copie de kit/verdier-jetons.css du dépôt atelierduverdier/site. Toute retouche faite ici sera écrasée : corriger la source, puis relancer outils/diffuser_kit.py. */
+/* Les JETONS de la charte de l'Atelier du Verdier, et rien d'autre.
+
+   Extrait de verdier.css par kit/extraire_jetons.py — ne pas éditer, ni
+   ici ni dans la copie posée chez un satellite : corriger verdier.css et
+   relancer l'extraction.
+
+   Ce fichier est fait pour les sites qui ont DÉJÀ leur mise en page et ne
+   veulent que les couleurs. Un site qui part de rien charge verdier.css
+   en entier. */
+
+:root{
+  --orange:#ff8a00; --orange-d:#e67a00; --orange-soft:#fff3e2;
+  --slate:#2f3540; --slate-2:#3c434f;
+  --bg:#ffffff; --bg-2:#f6f7f9; --bg-3:#eef0f3;
+  --fg:#23272e; --fg-2:#5a626e; --fg-3:#858d99;
+  --line:#e2e5ea; --line-2:#d3d8df;
+  --card:#ffffff; --shadow:0 1px 2px rgba(20,25,35,.06),0 8px 24px rgba(20,25,35,.06);
+  --tip:#eaf6ee; --tip-b:#3f9d5a; --warn:#fdf0e6; --warn-b:#e07a1f; --note:#eaf0fb; --note-b:#3f6fd1;
+  --radius:14px; --maxw:1180px;
+}
+
+@media (prefers-color-scheme: dark){
+  :root{
+    --orange:#ff9a1f; --orange-d:#ffab45; --orange-soft:#3a2b12;
+    --slate:#0f1215; --slate-2:#191d23;
+    --bg:#14171b; --bg-2:#1a1e23; --bg-3:#22272e;
+    --fg:#e6e9ee; --fg-2:#a8b0bc; --fg-3:#7c8592;
+    --line:#2a3038; --line-2:#353c46;
+    --card:#1b1f25; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+    --tip:#17281c; --tip-b:#48a765; --warn:#2e2113; --warn-b:#e08b3a; --note:#161f30; --note-b:#5183e0;
+  }
+}
+
+:root[data-theme="dark"]{
+  --orange:#ff9a1f; --orange-d:#ffab45; --orange-soft:#3a2b12;
+  --slate:#0f1215; --slate-2:#191d23;
+  --bg:#14171b; --bg-2:#1a1e23; --bg-3:#22272e;
+  --fg:#e6e9ee; --fg-2:#a8b0bc; --fg-3:#7c8592;
+  --line:#2a3038; --line-2:#353c46;
+  --card:#1b1f25; --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  --tip:#17281c; --tip-b:#48a765; --warn:#2e2113; --warn-b:#e08b3a; --note:#161f30; --note-b:#5183e0;
+}
+
+:root[data-theme="light"]{
+  --orange:#ff8a00; --orange-d:#e67a00; --orange-soft:#fff3e2;
+  --slate:#2f3540; --slate-2:#3c434f;
+  --bg:#ffffff; --bg-2:#f6f7f9; --bg-3:#eef0f3;
+  --fg:#23272e; --fg-2:#5a626e; --fg-3:#858d99;
+  --line:#e2e5ea; --line-2:#d3d8df;
+  --card:#ffffff; --shadow:0 1px 2px rgba(20,25,35,.06),0 8px 24px rgba(20,25,35,.06);
+  --tip:#eaf6ee; --tip-b:#3f9d5a; --warn:#fdf0e6; --warn-b:#e07a1f; --note:#eaf0fb; --note-b:#3f6fd1;
+}
