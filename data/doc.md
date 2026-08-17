@@ -568,6 +568,29 @@ Changement MANUEL avec palpage AUTOMATIQUE de la longueur d'outil. Déclenche pa
 - Mode pièce (#1001 = 1) : le Z se met a zero sur le dessus de la pièce.
 Le premier outil de la session sert de référence (variables #1000 et #1002). Le palpage se fait au palpeur fixe (G53 X-50 Y60), avec un double passage (rapide puis lent) pour la précision.
 
+## L'interface, aux couleurs de l'atelier
+Le pupitre est QtDragon HD, l'écran livré par LinuxCNC, habillé d'une feuille de style maison — orange sur ardoise. Le comportement n'est pas touché : une feuille de style ne peut pas l'être. Mêmes boutons, mêmes onglets, mêmes fonctions qu'à l'origine.
+
+![Le pupitre QtDragon HD aux couleurs de l'atelier, page MAIN, laser en broche](photos/interface-qtdragon-verdier.png)
+
+Elle n'est pas écrite à la main : un script la dérive du thème sombre livré avec LinuxCNC, qui couvre 72 sélecteurs. Un thème qui en oublie un laisse le widget concerné en style Qt par défaut — une plage claire au milieu de l'ardoise, et rien ne le signale. La dérivation a d'ailleurs rattrapé au passage ce que le thème d'origine laissait clair : menus, onglets, en-têtes, barres de défilement, les 99 infobulles, et le visualiseur de G-code, qui prend ses couleurs par propriétés et non par règles ordinaires.
+
+Deux choix ont l'air d'erreurs et n'en sont pas. Le rail de la barre d'avancement reste clair, comme dans les six thèmes livrés : Qt dessine le texte d'une seule couleur par-dessus le rempli **et** le vide, et « POWER 42% » doit se lire des deux côtés. Et le couple rouge/vert de l'arrêt d'urgence n'est pas repeint : c'est un état machine, pas un ornement. Un arrêt d'urgence orange au milieu d'une interface orange ne se voit plus.
+
+## L'image de l'outil en broche
+Le cadre d'image du pupitre était une décoration : une fraise fixe que personne ne mettait à jour. Elle suit désormais l'outil réellement en broche.
+
+![Les quatre cas : outil connu, laser, outil non décrit, pince vide](photos/interface-outil-en-broche.png)
+
+Trois cas, et le troisième est le plus important :
+- **Outil connu** (décrit dans le manifeste) : son dessin. Treize dessins existent — fraises droite, demi-ronde, fishtail, à chanfreiner, en V à 60 et 90°, vcarving, foret, surfaceuse, palpeur, laser.
+
+- **T0** : la pince vide, en tireté. Exact, il n'y a pas d'outil.
+
+- **Outil présent mais non décrit** : un dessin gris tireté, et surtout PAS la pince vide. Dire « pas d'outil » pour un outil qu'on ne sait pas nommer serait une fausse alarme : il y a bien un outil, on ignore lequel. C'est pourquoi le manifeste n'a pas besoin d'être complet, et pourquoi une entrée manquante n'est pas une erreur.
+
+Le manifeste (`tool_icons.txt`) associe un numéro d'outil à un dessin. Celui livré par LinuxCNC associait les numéros de quelqu'un d'autre — son T1 était une fraise hémisphérique, le nôtre un emplacement manuel — il aurait donc menti à chaque outil.
+
 ## Boutons utiles de l'interface
 - Tool Sensor : lance la mesure de longueur d'outil au palpeur fixe.
 
