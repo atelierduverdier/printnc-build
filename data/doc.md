@@ -583,11 +583,17 @@ Le cadre d'image du pupitre était une décoration : une fraise fixe que personn
 ![Les quatre cas : outil connu, laser, outil non décrit, pince vide](photos/interface-outil-en-broche.png)
 
 Trois cas, et le troisième est le plus important :
-- **Outil connu** (décrit dans le manifeste) : son dessin. Treize dessins existent — fraises droite, demi-ronde, fishtail, à chanfreiner, en V à 60 et 90°, vcarving, foret, surfaceuse, palpeur, laser.
+- **Outil connu** (décrit dans le manifeste) : son dessin. Il y en a quinze, ci-dessous.
 
 - **T0** : la pince vide, en tireté. Exact, il n'y a pas d'outil.
 
 - **Outil présent mais non décrit** : un dessin gris tireté, et surtout PAS la pince vide. Dire « pas d'outil » pour un outil qu'on ne sait pas nommer serait une fausse alarme : il y a bien un outil, on ignore lequel. C'est pourquoi le manifeste n'a pas besoin d'être complet, et pourquoi une entrée manquante n'est pas une erreur.
+
+![Les quinze images : treize outils rendus depuis leur modèle, plus les deux cas particuliers](photos/interface-jeu-outils.png)
+
+Treize d'entre elles ne sont pas dessinées mais **rendues depuis leur modèle** : un solide FreeCAD, un trait par Freestyle, une auréole orange au montage. La chaîne de modélisation vit hors du dépôt de la machine ; ce sont ses PNG à fond transparent qui y entrent. Les deux dernières — `inconnu` et `aucun` — restent vectorielles : ce ne sont pas des outils, ce sont des états.
+
+Elles sont calées sur la **hauteur** et non la largeur. Ces fraises sont élancées — 38 mm pour 3,17 de diamètre — et les caler sur la largeur les rendrait deux fois plus fines que le reste du jeu.
 
 Le manifeste (`tool_icons.txt`) associe un numéro d'outil à un dessin. Celui livré par LinuxCNC associait les numéros de quelqu'un d'autre — son T1 était une fraise hémisphérique, le nôtre un emplacement manuel — il aurait donc menti à chaque outil.
 
