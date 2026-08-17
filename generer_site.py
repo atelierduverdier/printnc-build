@@ -355,6 +355,42 @@ def construire():
       </div>
     </article>''')
 
+    # --- CLOTURE DE LA CHRONOLOGIE ---
+    # Le chantier est fini : la chronologie est un objet CLOS, pas un fil
+    # qu'on aurait cesse d'alimenter. Sans cette phrase, une derniere
+    # entree qui date de plusieurs mois se lit « site abandonne » -- or
+    # le travail continue, il a seulement change de nature et vit dans
+    # l'onglet Mises a jour. Le dernier mois est lu dans les donnees, il
+    # n'est pas ecrit ici : une date recopiee finit toujours par mentir.
+    if jalons:
+        # jalons est trie du PLUS RECENT au plus ancien (charger(), reverse=True) :
+        # la derniere video est donc jalons[0], et le bloc se place EN TETE.
+        # Ecrit d'abord avec jalons[-1] et un append, il annoncait « janvier
+        # 2026 » -- la premiere video du chantier -- au bas de la page.
+        dernier = jalons[0]['date']
+        # mois_onglet est SANS accents -- ce sont des libelles d'onglets, ou
+        # « Fevrier » et « Aout » passent inapercus. Dans une phrase, non :
+        # « elle s'arrete en aout 2026 » est une faute. D'ou cette table,
+        # qui ne sert qu'a la prose.
+        mois_prose = {'01': 'janvier', '02': 'février', '03': 'mars', '04': 'avril',
+                      '05': 'mai', '06': 'juin', '07': 'juillet', '08': 'août',
+                      '09': 'septembre', '10': 'octobre', '11': 'novembre',
+                      '12': 'décembre'}
+        mois_dernier = f"{mois_prose.get(dernier[5:7], dernier[:7])} {dernier[:4]}"
+        blocks.insert(0, f'''    <section class="month" data-month="{dernier[:7]}">
+      <div class="mhead">
+        <div class="mnom">Fin du chantier</div>
+        <h2 class="mtitre">La machine est construite</h2>
+        <p class="mdesc">Cette chronologie couvre la <b>construction</b> de la PrintNC,
+        de la caisse de pièces à la première gravure. Elle s'arrête en {mois_dernier}
+        parce que le chantier s'arrête là, non parce que l'atelier s'est tu : le travail
+        a changé de nature — logiciel, configuration, réglages — et se raconte désormais
+        dans l'onglet <b>Mises à jour</b>. Les vidéos du jour, elles, restent sur
+        <a href="https://www.instagram.com/atelierduverdier/" target="_blank" rel="noopener">Instagram</a>,
+        où elles paraissent.</p>
+      </div>
+    </section>''')
+
     # Mises a jour, Documentation, Recit, Glossaire
     maj_html = ''
     mp = os.path.join('data', 'maj.md')
