@@ -577,7 +577,11 @@ Le premier outil de la session sert de référence (variables #1000 et #1002). L
 
 - Ref Camera : pose le zéro pièce (G54) à partir de la position du réticule caméra, en appliquant l'offset Camera X/Y (touch off visuel). Ouvrir CAMVIEW et centrer le réticule sur le point d'origine avant de cliquer.
 
-- Aspirateur / Lumière / Ventilateurs : commandent les relais AUX correspondants.
+- Aspirateur / Lumière / Ventilateurs : commandent les relais AUX correspondants. AUX 2 s'appelle VENTILATEURS depuis le 13/08/2026, ce qu'il pilote réellement ; le bouton AUX 3 a été retiré, cette sortie étant dédiée à l'armement du laser.
+
+- MAJ DEPUIS SERVEUR (page FILE) : rapatrie les G-code du partage réseau vers le dossier local, dans ce sens seulement. Il n'attend ni mise sous tension ni prise d'origine — on prépare avant d'allumer.
+
+- Voyant LASER ARMÉ (panneau INPUTS) : rouge quand le +24 V du laser est établi. Rouge et non vert, parce qu'un laser sous tension est un danger et non un état courant. Il reste éteint en simulation, où la seconde broche n'existe pas.
 
 ## Codes utiles
 - M3 S<vitesse> : broche en marche (sens horaire) a la vitesse donnée. M5 : arrêt broche.
@@ -610,10 +614,14 @@ Les numéros d'outil ≥ 100 sont réservés aux lasers. Le laser est déclaré 
 
 Le palpage du laser est MÉCANIQUE : le script toolchange.ngc décale automatiquement la broche de l'inverse de l'offset laser pour que ce soit le nez alu du laser qui vienne toucher la pastille du palpeur fixe. Le nez est donc la référence Z du laser dans toute la chaîne d'offsets — c'est ce qui rend les workflows ci-dessous cohérents.
 
+**Descente en deux temps depuis le 17/08/2026.** Le nez du laser touche la pastille à **Z −51,11** en coordonnées machine (mesuré, pas estimé). La broche descend donc d'abord en rapide jusqu'à Z −45, et le palpage à 400 mm/min ne commence que là : la descente complète passe de 12 s à 3,5 s. Les 6 mm restants sont la marge de sécurité — le laser est monté sur une **glissière**, et le descendre de plus de 6 mm sur son support ferait toucher pendant le mouvement rapide. Le palpage imprime le point de contact en coordonnées machine à chaque passage : c'est ce chiffre-là qui fait foi, pas celui écrit ici.
+
+Cette descente rapide est réservée aux outils ≥ 100. Une fraise garde son palpage depuis Z 0, et ce n'est pas un oubli : la géométrie du laser est fixe, celle d'une fraise ne l'est pas. Un outil long touche bien plus haut que −45.
+
 ## La règle d'or des modes
 Le premier outil palpé de la session devient la référence (#1000), les suivants reçoivent un offset relatif. Ce qui change entre les modes, c'est ou vit le zéro Z :
 
-- Mode martyre (#1001 = 0) : zéro Z défini automatiquement au palpage (la distance palpeur-martyre est mécanique, 50.525 mm). N'importe quel outil peut être la référence, Y COMPRIS le laser : `T100 M6` seul suffit.
+- Mode martyre (#1001 = 0) : zéro Z défini automatiquement au palpage (la distance palpeur-martyre est mécanique, 50.525 mm). N'importe quel outil peut être la référence, Y COMPRIS le laser : `T100 M6` seul suffit. **Corrigé le 17/08/2026** : ce zéro sortait 3 mm TROP HAUT, parce que le `G10 L20` qui le pose s'exécute après la remontée de sécurité de 3 mm et lui attribuait la distance palpeur-martyre. Le défaut n'a jamais été vu au laser, qui travaille toujours en mode pièce — cette branche-là ne passe pas par ce calcul.
 
 - Mode pièce (#1001 = 1) : zéro Z pris manuellement sur le dessus de la pièce. La référence doit être l'outil qui a physiquement pris ce zéro — le laser qualifie aussi, en touchant la pièce avec son nez alu (papier a cigarette), exactement comme il touche la pastille du palpeur au M6.
 

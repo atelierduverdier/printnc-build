@@ -1,3 +1,69 @@
+# 17 août 2026 — Le pupitre passe aux couleurs de l'atelier, et le palpage laser tombe de 12 s à 3,5 s
+
+Douze jours sur la [configuration de la machine](https://github.com/atelierduverdier/printnc-config) et sur [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier), de la **v2.80** à la **v2.99.40**. Le fil : l'écran de la machine, qui n'avait jamais été touché depuis l'installation, et le palpage du laser, qui perdait dix secondes à chaque changement d'outil sans que personne ne les compte.
+
+## Le thème n'est pas écrit à la main, il est dérivé
+
+`verdier.qss` habille QtDragon HD aux couleurs de l'atelier — orange `#ff9a1f` sur ardoise `#14171b`. Il est **engendré** par un script à partir du `dark.qss` que livre LinuxCNC, et pas recopié : ce fichier couvre **72 sélecteurs**, et un thème qui en oublie un laisse le widget en style Qt par défaut — une plage claire au milieu de l'ardoise.
+
+Ce que la dérivation a corrigé au passage, tout mesuré :
+
+- `dark.qss` n'est sombre qu'à moitié. Menus, onglets, en-têtes et zone de texte étaient restés clairs, dont **cinq** avec un fond clair et **aucune** couleur de texte : les assombrir sans plus donnait du noir sur ardoise.
+- Il n'habille **ni** le visualiseur de G-code, **ni** les barres de défilement, **ni** les 99 infobulles.
+- « Lato Heavy », demandée **seize** fois, n'est installée nulle part et n'est pas empaquetée sur Arch : tout retombait en silence sur une autre police.
+
+Deux choix ont l'air d'erreurs et n'en sont pas. Le rail de la barre d'avancement reste clair, comme dans les six thèmes livrés : Qt dessine le texte d'une seule couleur par-dessus le rempli **et** le vide, et « POWER 42% » doit se lire des deux côtés. Et le couple rouge/vert de l'arrêt d'urgence n'est pas repeint : c'est un état machine, pas un ornement. Un arrêt d'urgence orange au milieu d'une interface orange ne se voit plus.
+
+## Ce que seul le lancement réel a trouvé
+
+L'aperçu hors écran valide la feuille de style, pas l'écran. Quatre défauts n'ont sauté aux yeux qu'en lançant le pupitre pour de vrai.
+
+Une couleur **nommée** peut survivre à une réécriture : `brown` est tombé d'une table de correspondance et les boutons ont porté une bordure marron jusqu'au lancement, parce que le contrôle ne cherchait que des `#hex`. Il cherche désormais tout mot en position de couleur — il en trouve sept dans `dark.qss`, aucun dans le nôtre.
+
+`black` et `gray` jouent **trois rôles** — bordure, fond, encre. Traduits en bloc, ils ont donné du `#2a3038` sur `#1a1e23` dans la ligne MDI : **1,4:1, illisible**. Un contrôle de contraste refuse maintenant tout couple sous 3:1.
+
+Et la barre d'état ne venait **pas** de la feuille : le gestionnaire posait `rgb(252,252,252)` directement sur le widget, et un style de widget bat celui de l'application. Aucun thème ne pouvait l'atteindre — c'était une bande blanche pleine largeur au bas de l'écran.
+
+## L'outil en broche se voit
+
+Le cadre d'image de l'écran était une **décoration** : une fraise fixe que personne ne mettait à jour. Il suit désormais l'outil réellement en broche, avec neuf dessins vectoriels faits pour l'atelier — fraise droite, demi-ronde, en V, foret, surfaceuse, palpeur, laser, plus deux cas particuliers.
+
+Le troisième cas est le plus important. Un outil **présent mais non décrit** affiche un dessin gris tireté, pas la pince vide : dire « pas d'outil » pour un outil qu'on ne sait pas nommer serait une fausse alarme. C'est pourquoi la liste des correspondances n'a pas besoin d'être complète.
+
+Leur grammaire tient en une règle : la **silhouette** distingue, pas le détail. À 160 px sur une ardoise, une goujure ne se lit pas ; un fond plat contre un fond rond, si. Deux dessins ont été repris après retour de l'atelier — le foret se confondait avec la fraise droite, et la fraise en V était une aiguille de 20° là où une vraie fait 60° et large.
+
+## Un voyant pour le laser armé
+
+Panneau INPUTS, rouge et non vert : un laser sous tension est un danger, pas un état courant. Il comble le seul vrai trou de l'interface — **rien à l'écran ne disait que le laser était sous tension**, alors qu'une pause ne le coupe pas et que le jumper P6 est la seule autre protection.
+
+Dans le même mouvement, le voyant LIMIT a été **retiré**, pas masqué. Il ne pouvait pas s'allumer : les quatre capteurs inductifs de cette machine sont en prise d'origine seule, il n'y a aucune fin de course. Un voyant éteint en permanence se lit « rien de déclenché, tout va bien » : c'est l'alarme qui s'apprend à ignorer. Retiré plutôt que caché, parce qu'un widget caché garde sa broche HAL : le jour où de vraies fins de course seraient câblées, le raccordement réussirait et n'allumerait rien — une panne silencieuse. Le widget supprimé, ce même raccordement fait échouer le démarrage. Une erreur bruyante vaut mieux qu'un voyant muet.
+
+## Les G-code arrivent du serveur en un bouton
+
+Le partage réseau est la **référence** — LaserAtelier y écrit, il est sauvegardé, et il est consultable machine éteinte, l'état normal de l'atelier. Le dossier local n'est qu'un cache. Mais on ne grave pas depuis le partage : LinuxCNC lit le programme au fil de l'exécution, et une coupure réseau au milieu d'un nuancier de plusieurs heures casserait la gravure.
+
+D'où un bouton « MAJ DEPUIS SERVEUR », page FILE, qui rapatrie dans **un seul sens**. Le script sait aussi pousser ; le bouton, non. Deux sens automatiques et la question de savoir qui fait foi se poserait un jour.
+
+## Le palpage laser : douze secondes, puis trois et demie
+
+Le laser touche la pastille du palpeur vers **Z −51**. Le palpage partait de Z 0 à 400 mm/min : plus de cinquante millimètres parcourus à la vitesse de mesure pour n'en mesurer qu'un. La descente se fait maintenant en rapide jusqu'à −45, et le palpage ne commence que là.
+
+Ce chiffre de −51 a coûté trois tours pour être obtenu, et c'est l'histoire intéressante. « Vers −45 » estimé de tête : faux. Reculé à −30 par prudence, pour protéger une marge qui n'existait pas. Un suivi vidéo de la tête, image par image : −47,6, faux de 7 % parce que l'échelle avait été prise sur un objet mesuré à l'œil. C'est une **vidéo de l'écran** qui a tranché — le DRO passe −42,5 à 6 s, −49,2 à 7 s, −50,9 à 9 s — recoupée par le palpage lui-même, qui imprime désormais le point de contact en coordonnées machine à chaque passage. Une valeur qu'on déduit se trompe ; une valeur que la machine imprime, non.
+
+Reste que la première correction ne se voyait pas : trois secondes et demie gagnées sur un cycle où la pause « vérifiez que l'outil est bien monté » attend un humain. C'est en cherchant pourquoi qu'on a trouvé le vrai poste — la remontée entre les deux passes, repalpée à 25 mm/min, coûtait à elle seule 4,8 s pour 2 mm.
+
+## Le zéro martyre sortait 3 mm trop haut
+
+Trouvé en tirant ce fil. Le `G10 L20` qui pose le zéro table s'exécute **après** la remontée de sécurité de 3 mm : il attribuait la distance palpeur-martyre à une position déjà dégagée d'autant.
+
+Le défaut n'a jamais été rencontré au laser parce que la gravure se fait toujours en **mode pièce**, zéro pris à la feuille de papier — ce mode ne passe pas par ce calcul. Il n'existait que dans la branche martyre. Le dégagement porte désormais un nom et entre dans le calcul du zéro qui en dépend.
+
+## LaserAtelier — v2.80 → v2.99.40
+
+Quarante-neuf versions, dont l'essentiel tient en quelques lignes. L'atelier **lit maintenant les limites de la machine dans son propre `.ini` LinuxCNC** au lieu de les demander. L'assistance d'air se commande en `M8`/`M9`, d'après un fichier qui a vraiment gravé. Les projets **LightBurn** s'importent par la même icône que les SVG. La projection d'un aplat sur du relief trouve sa surface toute seule. Un job combiné ne se recalcule plus entièrement à chaque ouverture ni à chaque déplacement. Et un audit a rattrapé le pire genre de défaut : une face invalide qui gravait **blanc, en silence**.
+
+Côté maison : la suite de tests passe de 1 min 54 s à 22 s en parallèle, et FreeCAD tourne désormais en paquet système — les deux AppImages refusaient de démarrer après réinstallation, leurs bibliothèques graphiques gelées en juillet contre un système de 2026.
+
 # 5 août 2026 — LaserAtelier v2.44 → v2.80 : écrire à la plume, et se faire démentir par le sapin
 
 Trois semaines sur [LaserAtelier](https://github.com/atelierduverdier/LaserAtelier) ([doc complète](https://laser.atelierduverdier.fr)), de la **v2.44** à la **v2.80.2**. Le fil de ces semaines : faire écrire la machine — calligraphie, polices, pleins et déliés — et, en chemin, se faire contredire trois fois par le bois.

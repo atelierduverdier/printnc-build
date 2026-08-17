@@ -120,11 +120,31 @@ def markdown_vers_html(md):
             if m:
                 alt, url = m.group(1), m.group(2)
                 out.append(f'<figure class="doc-photo"><img src="{url}" alt="{alt}" loading="lazy"><figcaption>{alt}</figcaption></figure>')
+        elif ln.strip().startswith('- ') or ln.strip().startswith('* '):
+            # Les listes, comme dans l'onglet Documentation. Sans cette
+            # branche elles tombaient dans le cas « paragraphe » juste en
+            # dessous, qui recolle les lignes suivantes : trois puces
+            # devenaient une phrase a rallonge, tirets compris, et rien
+            # ne le signalait. L'entree du 5 aout en portait 28.
+            import re as _re
+            items = []
+            while i < len(lignes) and (lignes[i].strip().startswith('- ')
+                                       or lignes[i].strip().startswith('* ')):
+                item_txt = esc(lignes[i].strip()[2:])
+                item_txt = _re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', item_txt)
+                item_txt = _re.sub(r'`([^`]+)`', r'<code>\1</code>', item_txt)
+                item_txt = _re.sub(r'\[([^\]]+)\]\((https?://[^)]+)\)',
+                                   r'<a href="\2" target="_blank" rel="noopener">\1</a>',
+                                   item_txt)
+                items.append(f'<li>{item_txt}</li>')
+                i += 1
+            out.append('<ul class="doc-liste">' + ''.join(items) + '</ul>')
+            continue
         elif ln.strip():
             para = [esc(ln.strip())]
             while (i + 1 < len(lignes) and lignes[i+1].strip()
                    and not lignes[i+1].startswith(('#', '```'))
-                   and not lignes[i+1].lstrip().startswith('|')):
+                   and not lignes[i+1].lstrip().startswith(('|', '- ', '* '))):
                 i += 1
                 para.append(esc(lignes[i].strip()))
             txt = ' '.join(para)
