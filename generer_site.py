@@ -481,6 +481,13 @@ MODELE = '''<!DOCTYPE html>
      croisent ; on ne prend donc que les couleurs. */
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;}
+  /* Couleur de lien PAR DEFAUT. Elle manquait : le seul selecteur « a » nu
+     de la feuille etait celui de l'impression, si bien qu'un lien pose
+     ailleurs que dans une classe prevue sortait en BLEU navigateur sur
+     l'ardoise. Vu sur le lien Instagram de la cloture ; le « CC BY 4.0 » du
+     pied de page etait dans le meme cas depuis toujours. Les regles de
+     classe restent prioritaires : le compteur de visites garde son gris. */
+  a{color:var(--orange);text-decoration:none;}
   .wrap{max-width:820px;margin:0 auto;padding:0 20px;}
   header{padding:70px 0 44px;border-bottom:1px solid var(--line);}
   .logo{max-width:200px;height:auto;margin-bottom:24px;display:block;}
@@ -569,8 +576,8 @@ MODELE = '''<!DOCTYPE html>
   .maj-date-sep{font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--orange);font-weight:600;margin:40px 0 18px;padding-bottom:8px;border-bottom:1px solid var(--line);}
   .maj-titre{font-size:18px;font-weight:600;color:var(--text);margin-bottom:6px;}
   .maj-desc{font-size:15px;line-height:1.7;color:var(--muted);margin-bottom:12px;}
-  .maj-desc a, .doc-important a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
-  .maj-desc a:hover, .doc-important a:hover{opacity:.7;}
+  .maj-desc a, .doc-important a, .mdesc a{color:var(--orange);text-decoration:none;border-bottom:1px solid var(--orange);transition:.15s;}
+  .maj-desc a:hover, .doc-important a:hover, .mdesc a:hover{opacity:.7;}
   .maj-code{background:var(--bg-3);border:1px solid var(--line);border-radius:8px;padding:14px 16px;font-family:'Consolas','Monaco',monospace;font-size:13px;line-height:1.5;color:var(--fg);overflow-x:auto;margin:8px 0 16px;white-space:pre;}
   .maj-desc code{background:var(--bg-3);border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:monospace;font-size:13px;color:var(--orange);}
   .doc-table{width:100%;border-collapse:collapse;margin:10px 0 18px;font-size:14px;}
