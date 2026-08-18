@@ -30,6 +30,7 @@
   });
 </script>
 <link rel="stylesheet" href="kit/verdier-jetons.css">
+<link rel="stylesheet" href="kit/verdier-entete.css">
 <style>
   /* Le journal sous la charte commune (chantier 3, 12/08/2026).
      Ses 209 regles ne changent pas : ce sont ses NOMS de jetons qui
@@ -55,7 +56,12 @@
      classe restent prioritaires : le compteur de visites garde son gris. */
   a{color:var(--orange);text-decoration:none;}
   .wrap{max-width:820px;margin:0 auto;padding:0 20px;}
-  header{padding:70px 0 44px;border-bottom:1px solid var(--line);}
+  /* :not(.topbar) — cette regle visait TOUS les <header>. Mesure au
+     navigateur le 18/08/2026 : la barre de l'atelier heritait de ses
+     70+44 px et faisait 175 px de haut au lieu de 60, recouvrant les
+     onglets qu'elle devait laisser passer dessous. Le heros garde son
+     air, la barre reprend sa hauteur. */
+  header:not(.topbar){padding:70px 0 44px;border-bottom:1px solid var(--line);}
   .logo{max-width:200px;height:auto;margin-bottom:24px;display:block;}
   .kicker{font-size:13px;letter-spacing:3px;color:var(--orange);text-transform:uppercase;margin-bottom:14px;}
   h1{font-size:clamp(34px,6vw,56px);font-weight:700;line-height:1.05;letter-spacing:-1px;margin-bottom:18px;}
@@ -73,7 +79,15 @@
      remplace des NOMS de jetons, elle ne peut rien contre une valeur
      litterale. D'ou une bande noire en travers d'une page devenue claire.
      Meme forme que la barre du portail, dans kit/verdier.css. */
-  .nav{position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);z-index:10;}
+  /* Les onglets collent SOUS la barre de l'atelier, et non a top:0 ou
+     ils passaient derriere elle (leur z-index vaut 10, le sien 50) et
+     disparaissaient des qu'on defilait.
+
+     La valeur est MESUREE par majMargeAncre, pas ecrite en dur : depuis
+     le 18/08/2026 la barre du kit a une hauteur MINIMALE de 60 px et non
+     fixe — elle grandit si ses liens passent a deux lignes. Un 60 en dur
+     redonnerait le chevauchement le jour ou elle grandit. */
+  .nav{position:sticky;top:var(--haut-barre,61px);background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);z-index:10;}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 20px 6px;}
   .tabs-mois{display:flex;gap:6px;flex-wrap:wrap;padding:4px 20px 10px;border-top:1px solid var(--line);}
   .tab-mois{font-size:13px;padding:6px 13px;}
@@ -134,7 +148,9 @@
   .empty{padding:40px 0;color:var(--faint);font-size:15px;text-align:center;display:none;}
 #accueil, #tl, #recit, #maj, #doc, #gloss { display: none; padding: 30px 0 60px; max-width: 680px; }
 #accueil.show, #tl.show, #recit.show, #maj.show, #doc.show, #gloss.show { display: block; }
-  .recit-progress{position:fixed;top:0;left:0;height:3px;background:var(--orange);width:0%;z-index:20;transition:width .1s linear;pointer-events:none;}
+  /* z-index:51, au-dessus de la barre (50) : a 20 ce trait de 3 px
+     passait derriere son fond translucide et son flou. */
+  .recit-progress{position:fixed;top:0;left:0;height:3px;background:var(--orange);width:0%;z-index:51;transition:width .1s linear;pointer-events:none;}
   .recit-h{font-size:22px;color:var(--orange);margin:36px 0 14px;font-weight:700;}
   .recit-h:first-child{margin-top:8px;}
   .recit-p{font-size:16px;line-height:1.8;color:var(--text);margin-bottom:16px;}
@@ -210,11 +226,6 @@
   .lightbox-close{position:fixed;top:18px;right:24px;font-size:32px;color:#fff;cursor:pointer;line-height:1;opacity:.7;transition:.15s;}
   .lightbox-close:hover{opacity:1;color:var(--orange);}
   .lightbox-caption{position:fixed;bottom:20px;left:0;right:0;text-align:center;color:var(--muted);font-size:14px;font-style:italic;pointer-events:none;}
-  .theme-toggle{position:fixed;top:14px;right:120px;z-index:25;background:var(--surface);border:1px solid var(--line);color:var(--orange);font-size:18px;width:36px;height:36px;border-radius:50%;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;}
-  .theme-toggle:hover{background:var(--orange);color:#13110e;}
-  .github-ribbon{position:fixed;top:0;right:0;z-index:24;width:130px;height:130px;overflow:hidden;pointer-events:none;}
-  .github-ribbon a{position:absolute;display:block;width:170px;padding:7px 0;background:var(--orange);color:#13110e;font-size:12px;font-weight:700;text-align:center;text-decoration:none;letter-spacing:.5px;transform:rotate(45deg);right:-42px;top:32px;box-shadow:0 2px 6px rgba(0,0,0,.35);pointer-events:auto;transition:.2s;}
-  .github-ribbon a:hover{background:#ff9a3c;}
   .back-to-top{position:fixed;bottom:30px;right:30px;width:44px;height:44px;background:var(--orange);color:#13110e;border:none;border-radius:50%;font-size:20px;cursor:pointer;opacity:0;visibility:hidden;transition:.2s;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:20;}
   .back-to-top.show{opacity:1;visibility:visible;}
   .back-to-top:hover{transform:translateY(-3px);}
@@ -237,7 +248,7 @@
   .adv-rate__btn svg{fill:currentColor;}
   .adv-rate__avg{margin:.6rem 0 0;font-size:.82rem;color:var(--muted);min-height:1.1em;}
   @media print{
-    .nav,.filters,.theme-toggle,.tab-actions,.recit-progress,.github-ribbon,.back-to-top,.search-box,#tl,#recit,#maj,#accueil,footer{display:none!important;}
+    .nav,.filters,.topbar,.tab-actions,.recit-progress,.back-to-top,.search-box,#tl,#recit,#maj,#accueil,footer{display:none!important;}
     #doc,#gloss{display:block!important;max-width:100%!important;}
     .doc-section{border:none!important;margin-bottom:12px!important;}
     .doc-section-titre{background:none!important;border-bottom:1px solid #ccc!important;}
@@ -246,13 +257,26 @@
     a{color:#000!important;text-decoration:none!important;}
     body{background:#fff!important;color:#000!important;}
   }
-  @media(max-width:600px){.theme-toggle{right:90px;}.github-ribbon{width:100px;height:100px;}.github-ribbon a{font-size:10px;width:150px;right:-40px;top:24px;}}
   @media (prefers-reduced-motion:reduce){.adv-rate__btn{transition:none;}.adv-rate__btn:hover{transform:none;}}
   .share-btn{background:none;border:none;color:var(--faint);cursor:pointer;padding:0 4px;display:inline-flex;align-items:center;transition:.15s;flex-shrink:0;vertical-align:middle;line-height:1;}
   .share-btn:hover{color:var(--orange);}
   .share-btn svg{fill:currentColor;display:block;}
   .item .share-btn,.mnom .share-btn{opacity:0;}
   .item:hover .share-btn,.mnom:hover .share-btn{opacity:1;}
+  /* MARGE DE DEFILEMENT DES ANCRES — valeur posee par le JS (voir
+     majMargeAncre), jamais devinee : la hauteur des barres collantes
+     change avec l'onglet et avec la largeur de la fenetre.
+
+     Mesure au navigateur le 18/08/2026, sur la version d'AVANT la barre
+     de l'atelier : une ancre #v-... amenait deja l'etape ENTIEREMENT
+     derriere la barre d'onglets — etape haute de 103 px, barres de
+     192 px, item pose a 0. Le defaut ne vient donc pas de la barre
+     commune ; elle l'aggravait de 60 px, d'ou la reparation ici.
+
+     Le repli de 264 px sert si le JS ne tourne pas : c'est la pile
+     mesuree sur l'onglet « Timeline » en 1280 px de large, plus un peu
+     d'air. */
+  .item,.doc-section,.month{scroll-margin-top:var(--marge-ancre,264px);}
   .doc-section{position:relative;}
   .doc-section .share-btn{position:absolute;top:13px;right:46px;opacity:0;}
   .doc-section:hover .share-btn{opacity:1;}
@@ -261,10 +285,41 @@
 </style>
 </head>
 <body>
+<!-- LA BARRE COMMUNE DE L'ATELIER — gabarit kit/entete.html du depot
+     « site », son CSS vient de kit/verdier-entete.css.
+
+     Ce qu'elle repare, releve le 18/08/2026 : ce journal citait
+     `atelierduverdier.fr` cinq fois, et les CINQ etaient
+     `laser.atelierduverdier.fr`. Aucun lien vers la racine du domaine.
+     Depuis la bascule du 12/08, la racine sert le portail — un visiteur
+     arrive d'un reel Instagram n'avait donc aucune porte de sortie vers
+     l'atelier. C'etait ca, le decousu ; pas le sous-domaine.
+
+     Le bouton de theme est ICI et plus en rond flottant : a top:14px il
+     tombait dans la bande de la barre, et derriere elle. -->
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="https://atelierduverdier.fr/" aria-label="Atelier du Verdier">
+      <img class="chapeau" src="kit/verdier-chapeau.svg" alt="">
+      Atelier du Verdier
+      <span class="brand-sub">Journal PrintNC</span>
+    </a>
+    <button class="nav-btn" type="button" aria-label="Ouvrir le menu"
+            aria-controls="menu-principal">☰</button>
+    <nav class="navlinks" id="menu-principal">
+      <a href="https://atelierduverdier.fr/">Accueil</a>
+      <a href="https://atelierduverdier.fr/#logiciels">Logiciels</a>
+      <a href="https://atelierduverdier.fr/#atelier">L'atelier</a>
+      <a href="https://atelierduverdier.fr/projets/">Projets</a>
+      <a href="https://github.com/atelierduverdier" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+    <button class="theme-btn" id="theme-toggle" title="Mode jour/nuit"
+            aria-label="Basculer entre le theme clair et le theme sombre">☀</button>
+  </div>
+</header>
 <header>
   <div class="wrap">
     <img class="logo" src="https://raw.githubusercontent.com/atelierduverdier/printnc-config/main/PrintNC.png" alt="Logo PrintNC Atelier du Verdier" onerror="this.style.display='none'">
-    <button class="theme-toggle theme-btn" id="theme-toggle" title="Mode jour/nuit">☀</button>
     <div class="kicker">Atelier du Verdier</div>
     <h1>Journal de construction</h1>
     <p class="sub">L'histoire complète d'une fraiseuse CNC construite de zero, du premier montage à blanc jusqu'à la machine pleinement fonctionnelle.</p>
@@ -316,7 +371,6 @@
     </div>
   </div>
 </nav>
-<div class="github-ribbon"><a href="https://github.com/atelierduverdier" target="_blank" rel="noopener">GitHub</a></div>
 <div class="recit-progress" id="recit-progress"></div>
 <button class="back-to-top" id="back-to-top" title="Remonter en haut">↑</button>
 
@@ -3723,7 +3777,27 @@ function switchTab(month) {
     filterTimeline();
     if (month === 'accueil') history.replaceState(null, '', window.location.pathname);
     else history.replaceState(null, '', '#' + month);
+
+    // C'est ici que la pile change de hauteur : la rangee des mois, la
+    // recherche et les filtres viennent d'apparaitre ou de disparaitre.
+    majMargeAncre();
 }
+
+// Hauteur reelle des barres collantes -> --marge-ancre. La barre de
+// l'atelier est fixe (60 px) mais celle des onglets grandit avec la
+// rangee des mois, la recherche et les filtres, et grandit encore quand
+// les onglets passent a la ligne en etroit. On la MESURE.
+function majMargeAncre() {
+    var barre = document.querySelector('header.topbar');
+    var onglets = document.querySelector('nav.nav');
+    if (!onglets) return;
+    var hb = barre ? barre.offsetHeight : 61;
+    document.documentElement.style.setProperty('--haut-barre', hb + 'px');
+    document.documentElement.style.setProperty('--marge-ancre',
+        (hb + onglets.offsetHeight + 12) + 'px');
+}
+majMargeAncre();
+window.addEventListener('resize', majMargeAncre);
 
 tabs.forEach(t => t.addEventListener('click', () => switchTab(t.dataset.month)));
 

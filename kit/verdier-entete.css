@@ -1,0 +1,81 @@
+/* ENGENDRÉ — ne pas éditer ici.
+   Ce fichier est une copie de kit/verdier-entete.css du dépôt atelierduverdier/site. Toute retouche faite ici sera écrasée : corriger la source, puis relancer outils/diffuser_kit.py. */
+/* L'EN-TÊTE de la charte de l'Atelier du Verdier, et rien d'autre.
+
+   Extrait de verdier.css par kit/extraire_entete.py — ne pas éditer, ni
+   ici ni dans la copie posée chez un satellite : corriger verdier.css et
+   relancer l'extraction.
+
+   Ce fichier va avec verdier-jetons.css, pour les sites qui gardent leur
+   mise en page mais veulent la barre du haut commune — celle qui porte le
+   chemin du retour vers atelierduverdier.fr. Un site qui charge
+   verdier.css en entier l'a déjà : ne pas ajouter les deux.
+
+   Il suppose que le site fournit `.wrap`, son conteneur centré. */
+
+/* ---------- 3. En-tête ------------------------------------------------- */
+
+header.topbar{
+  position:sticky; top:0; z-index:50; background:color-mix(in srgb,var(--bg) 88%, transparent);
+  backdrop-filter:saturate(140%) blur(10px); border-bottom:1px solid var(--line);
+}
+/* min-height et non height : `.navlinks` a `flex-wrap:wrap`, donc au-delà
+   d'un certain nombre de liens la rangée passe à deux lignes — et une
+   hauteur FIXE les laissait alors déborder par-dessous, sur le héros.
+   Mesuré au navigateur le 18/08/2026 sur le site laser et ses neuf liens
+   de sections : il débordait sous 1052 px de fenêtre, et le seuil montait
+   à 1143 px une fois la marque élargie du chemin vers le portail. Sous
+   860 px la question ne se pose pas, les liens passent derrière le ☰.
+   Le portail n'en voit rien : ses quatre liens tiennent sur une ligne. */
+.topbar .wrap{display:flex; align-items:center; gap:16px; min-height:60px}
+.brand{display:flex; align-items:center; gap:10px; font-weight:700; color:var(--fg)}
+.brand:hover{text-decoration:none}
+.brand .dot{width:26px;height:26px;border-radius:7px;background:#fff;
+  border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.brand .dot svg{width:17px;height:17px;display:block}
+.brand .dot img{height:20px;width:auto;display:block}
+
+/* La marque « chapeau » : variante du .dot sans plaque blanche. Le chapeau
+   est NOIR et porte son propre liseré blanc — c'est ce liseré qui le
+   détache du fond sombre. Ne PAS le repeindre en blanc pour le faire
+   ressortir : ce n'est plus le logo. */
+.brand .chapeau{height:26px;width:auto;display:block;flex:none}
+
+/* Le logo complet (chapeau + mot-symbole), collé en ligne par le
+   générateur. Son mot-symbole est en `currentColor` : il prend donc la
+   couleur de texte du contexte, et suit le thème. Le chapeau, lui, garde
+   ses couleurs propres. */
+.brand svg.logo{height:26px;width:auto;display:block;flex:none;color:var(--fg)}
+@media(max-width:430px){ .brand svg.logo{height:22px} }
+
+.brand-sub{color:var(--fg-3); font-weight:500; font-size:.9rem;
+  border-left:1px solid var(--line-2); padding-left:10px; margin-left:2px}
+@media(max-width:620px){ .brand-sub{display:none} }
+
+.navlinks{display:flex; gap:4px; margin-left:auto; flex-wrap:wrap}
+.navlinks a{color:var(--fg-2); padding:6px 11px; border-radius:8px; font-size:.92rem; font-weight:500}
+.navlinks a:hover{background:var(--bg-3); color:var(--fg); text-decoration:none}
+.navlinks a[aria-current="page"]{color:var(--orange-d); background:var(--orange-soft)}
+
+.theme-btn,.nav-btn{border:1px solid var(--line-2); background:var(--card); color:var(--fg-2);
+  width:38px;height:38px;border-radius:9px;cursor:pointer;font-size:1.05rem; flex:none}
+.theme-btn{margin-left:6px}
+.theme-btn:hover,.nav-btn:hover{color:var(--fg); border-color:var(--orange)}
+.nav-btn{display:none; margin-left:auto}   /* montré seulement en étroit */
+
+/* Navigation en étroit — le chantier 0 laissait `.navlinks` en display:none
+   sans rien pour la remplacer : sous 860 px il n'y avait plus AUCUNE
+   navigation. Acceptable sur une page unique à ancres, pas sur un portail.
+   Le menu est un panneau déroulant, sans dépendance : si le JS ne se charge
+   pas, le bouton reste inerte mais rien d'autre ne casse. */
+@media(max-width:860px){
+  .nav-btn{display:block}
+  .theme-btn{margin-left:0}
+  .navlinks{
+    display:none; position:absolute; left:0; right:0; top:60px;
+    flex-direction:column; gap:2px; margin:0; padding:10px 14px 14px;
+    background:var(--bg); border-bottom:1px solid var(--line); box-shadow:var(--shadow);
+  }
+  .navlinks.ouvert{display:flex}
+  .navlinks a{padding:10px 12px; font-size:1rem}
+}
