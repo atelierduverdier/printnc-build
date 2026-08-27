@@ -1,0 +1,62 @@
+/* ENGENDRÉ — ne pas éditer ici.
+   Ce fichier est une copie de kit/verdier-mouvement.css du dépôt atelierduverdier/site. Toute retouche faite ici sera écrasée : corriger la source, puis relancer outils/diffuser_kit.py. */
+/* Le MOUVEMENT de la charte de l'Atelier du Verdier, la part portable.
+
+   Extrait de verdier.css (section 13bis-a) par kit/extraire_mouvement.py —
+   ne pas éditer, ni ici ni dans la copie posée chez un satellite :
+   corriger verdier.css et relancer l'extraction.
+
+   Ce fichier va avec verdier-jetons.css et verdier.js, pour les sites qui
+   gardent leur mise en page. Il ne nomme que ce que le kit écrit lui-même :
+   rien ici ne peut entrer en collision avec la feuille de l'hôte. Un site
+   qui charge verdier.css en entier l'a déjà : ne pas ajouter les deux.
+
+   Il a BESOIN de verdier.js : c'est le script qui pose `.js-reveal`, et
+   seulement s'il sait l'animer. Poser ce fichier SANS le script ne cache
+   rien (aucun élément ne porte la classe) ; poser la classe à la main dans
+   le HTML rendrait le contenu invisible chez qui n'exécute pas le script.
+
+   Les jetons `--sortie` et `--leve` viennent de verdier-jetons.css. */
+
+/* ---------- 13bis-a. Portable -------------------------------------------
+   CE QUI SUIT NE SUPPOSE AUCUNE MISE EN PAGE. Les seuls noms cites sont
+   ecrits par le kit lui-meme — `.js-reveal` par verdier.js, `data-agrandir`
+   par la visionneuse — ou sont des elements bruts. Rien ici ne peut entrer
+   en collision avec la feuille d'un site hote.
+
+   C'est pour cela que kit/extraire_mouvement.py en tire
+   verdier-mouvement.css, pose chez les satellites qui gardent leur propre
+   mise en page. Les bornes de cette part sont ses reperes : ne pas
+   renommer ces deux bandeaux sans corriger l'extracteur (il s'arrete au
+   lieu de produire un fichier vide, mais autant ne pas le declencher).
+
+   AJOUTER UNE REGLE ICI, C'EST L'ENVOYER SUR QUATRE SITES. Une regle qui
+   nomme `.carte`, `.hero`, `.btn` ou tout autre classe de mise en page va
+   dans 13bis-b, pas ici. */
+
+/* L'entree dans le champ. Posee par verdier.js, jamais par le HTML. */
+.js-reveal{ opacity:0; transform:translateY(16px);
+  transition:opacity .75s var(--sortie), transform .75s var(--sortie) }
+.js-reveal.vu{ opacity:1; transform:none }
+
+/* Une planche qu'on peut agrandir doit le DIRE avant le clic. */
+[data-agrandir]{ cursor:zoom-in }
+
+/* Une ancre ne doit pas se garer SOUS la barre collante. `scroll-margin`
+   plutot qu'un decalage bricole : le navigateur s'en charge, y compris au
+   clavier et depuis un lien externe.
+
+   84 px = la barre du kit (60) et de quoi respirer. MAIS LE CHIFFRE EST
+   UNE VARIABLE, et ce n'est pas de la coquetterie : chez un hote, les
+   barres collantes n'ont pas cette hauteur-la. Le journal PrintNC empile
+   la barre de l'atelier et sa rangee d'onglets, mesure le total a chaque
+   bascule de vue et le publie dans `--marge-ancre` — 128 px releves le
+   27/08/2026. En lisant cette variable, la regle prend le bon chiffre chez
+   qui le connait, et garde 84 chez qui ne dit rien. */
+html{ scroll-behavior:smooth }
+section[id],h2[id],h3[id]{ scroll-margin-top:var(--marge-ancre, 84px) }
+
+@media (prefers-reduced-motion:reduce){
+  html{ scroll-behavior:auto }
+  .js-reveal,.js-reveal.vu{ opacity:1; transform:none; transition:none }
+}

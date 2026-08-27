@@ -465,6 +465,19 @@ MODELE = '''<!DOCTYPE html>
 </script>
 <link rel="stylesheet" href="kit/verdier-jetons.css">
 <link rel="stylesheet" href="kit/verdier-entete.css">
+<!-- verdier-mouvement.css : la part PORTABLE du mouvement de la charte
+     (section 13bis-a). Elle ne nomme que ce que le kit ecrit lui-meme —
+     `.js-reveal`, pose par verdier.js — donc rien ici ne peut entrer en
+     collision avec la mise en page de cette page. Le reste du mouvement
+     (survols, halo du heros) reste chez le portail : il s'appuie sur les
+     classes du kit, et c'est la lecon des 258 px. -->
+<link rel="stylesheet" href="kit/verdier-mouvement.css">
+<!-- Ce que le journal donne A REVELER, avec SES noms de classes : le kit ne
+     connait que les siens, et n'en trouvait aucun ici. On declare les blocs
+     du RECIT, pas les 265 `.item` de la frise — ceux-la passent derriere des
+     filtres, et un bloc filtre est un bloc qu'on ne veut pas voir apparaitre
+     en fondu quand on change d'onglet. -->
+<meta name="verdier-mouvement" content=".doc-section, .recit-p, .doc-photo, .doc-table">
 <style>
   /* Le journal sous la charte commune (chantier 3, 12/08/2026).
      Ses 209 regles ne changent pas : ce sont ses NOMS de jetons qui
@@ -896,6 +909,24 @@ function switchTab(month) {
     // C'est ici que la pile change de hauteur : la rangee des mois, la
     // recherche et les filtres viennent d'apparaitre ou de disparaitre.
     majMargeAncre();
+
+    // Le mouvement de la charte (kit/verdier.js) a balaye la page au
+    // chargement, quand AUCUN de ces blocs n'etait rendu : ils vivent tous
+    // derriere les quatre cartes de l'accueil. On lui redonne la main
+    // maintenant que la vue existe.
+    //
+    // SEULEMENT POUR LES VUES QUI SE LISENT. La timeline est une liste qui
+    // repond a des filtres et a une recherche : y faire apparaitre les
+    // resultats en fondu ferait attendre le visiteur pour ce qu'il vient
+    // de demander. `filterTimeline` n'appelle donc rien.
+    if (window.verdierMouvement && sections[month] &&
+        (month === 'recit' || month === 'doc' || month === 'gloss' || month === 'maj')) {
+      // Apres le rendu : les blocs viennent d'obtenir `show`, et leurs
+      // dimensions ne sont pas encore a jour dans ce tour de boucle.
+      requestAnimationFrame(function(){
+        window.verdierMouvement.rescanner(sections[month]);
+      });
+    }
 }
 
 // Hauteur reelle des barres collantes -> --marge-ancre. La barre de
