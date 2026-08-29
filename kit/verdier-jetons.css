@@ -11,6 +11,11 @@
    en entier. */
 
 :root{
+  /* Le navigateur peut peindre son canevas, ses ascenseurs et ses widgets
+     natifs dans les deux livrées — la <meta> d'entete.html le dit déjà
+     avant même cette feuille, celle-ci le confirme pour les copies du kit
+     qui n'auraient pas la balise. */
+  color-scheme: light dark;
   --orange:#ff8a00; --orange-d:#e67a00; --orange-soft:#fff3e2;
   --slate:#2f3540; --slate-2:#3c434f;
   --bg:#ffffff; --bg-2:#f6f7f9; --bg-3:#eef0f3;
@@ -19,6 +24,18 @@
   --card:#ffffff; --shadow:0 1px 2px rgba(20,25,35,.06),0 8px 24px rgba(20,25,35,.06);
   --tip:#eaf6ee; --tip-b:#3f9d5a; --warn:#fdf0e6; --warn-b:#e07a1f; --note:#eaf0fb; --note-b:#3f6fd1;
   --radius:14px; --maxw:1180px;
+  /* LA MESURE : la largeur d'une ligne de TEXTE, qui n'est pas celle de la
+     page. Sans elle, un paragraphe prenait les 1136 px de la colonne, soit
+     154 signes par ligne (mesuré le 29/08/2026 sur la fiche du sabot,
+     caractère moyen 7,17 px). Au-delà de ~80 l'œil rate la ligne suivante
+     en revenant à gauche : on fatigue sans savoir pourquoi. 35rem donne 78
+     signes — juste au-dessus du chapô du héros, qui en fait 73 et que
+     personne n'a jamais trouvé trop étroit.
+     EN REM, JAMAIS EN CH. `ch` mesure le glyphe « 0 », qui fait 11,39 px
+     ici quand le caractère moyen en fait 7,17 : `70ch` ne livre pas 70
+     signes mais 111. Deux règles de cette feuille étaient dans ce piège.
+     Le rem, lui, suit la taille de texte choisie par le visiteur. */
+  --mesure:35rem;
 }
 
 @media (prefers-color-scheme: dark){
