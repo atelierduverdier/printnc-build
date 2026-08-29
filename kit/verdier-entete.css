@@ -74,7 +74,7 @@ header.topbar{
    page — une fiche projet allume « Projets » sans être « Projets ». Le
    sélecteur ne visait que `="page"`, et rien ne posait l'attribut : la
    règle a attendu du 12/08 au 29/08/2026 sans jamais s'appliquer une fois. */
-.navlinks a[aria-current]{color:var(--orange-d); background:var(--orange-soft)}
+.navlinks a[aria-current]{color:var(--orange-encre); background:var(--orange-soft)}
 
 .theme-btn,.nav-btn{border:1px solid var(--line-2); background:var(--card); color:var(--fg-2);
   width:38px;height:38px;border-radius:9px;cursor:pointer;font-size:1.05rem; flex:none}

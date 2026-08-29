@@ -17,6 +17,20 @@
      qui n'auraient pas la balise. */
   color-scheme: light dark;
   --orange:#ff8a00; --orange-d:#e67a00; --orange-soft:#fff3e2;
+  /* L'ENCRE ORANGE N'EST PAS L'ORANGE DE LA MARQUE, et c'est tout le
+     propos de ce jeton. `--orange-d` tenait DEUX rôles à la fois : encre
+     de texte, et fond de survol des boutons. Les deux tirent en sens
+     contraire — plus on fonce pour que le texte se lise sur blanc, moins
+     le texte foncé du bouton se lit sur le fond. Un seul jeton ne pouvait
+     pas les tenir.
+     Mesuré le 29/08/2026 : #e67a00 sur blanc donne 2,94:1, quand il en
+     faut 4,5 pour du texte courant et 3 pour du gros. Or c'est la couleur
+     des liens, des étiquettes de section, et des 31 GRANDS CHIFFRES qui
+     sont l'argument de ce site : ils étaient l'élément le moins lisible
+     de la page. #ac5b00 est le plus CLAIR qui tienne 4,5 sur les trois
+     fonds où il se pose — blanc 4,94, --orange-soft 4,51, --bg-2 4,61 —
+     à la teinte exacte de la marque (31,8°), qui ne bouge pas. */
+  --orange-encre:#ac5b00;
   --slate:#2f3540; --slate-2:#3c434f;
   --bg:#ffffff; --bg-2:#f6f7f9; --bg-3:#eef0f3;
   --fg:#23272e; --fg-2:#5a626e; --fg-3:#858d99;
@@ -41,6 +55,8 @@
 @media (prefers-color-scheme: dark){
   :root{
     --orange:#ff9a1f; --orange-d:#ffab45; --orange-soft:#3a2b12;
+  /* Sur fond sombre l'encre n'a jamais manqué : 8,79:1 sur --card. */
+  --orange-encre:#ffab45;
     --slate:#0f1215; --slate-2:#191d23;
     --bg:#14171b; --bg-2:#1a1e23; --bg-3:#22272e;
     --fg:#e6e9ee; --fg-2:#a8b0bc; --fg-3:#7c8592;
@@ -52,6 +68,8 @@
 
 :root[data-theme="dark"]{
   --orange:#ff9a1f; --orange-d:#ffab45; --orange-soft:#3a2b12;
+  /* Sur fond sombre l'encre n'a jamais manqué : 8,79:1 sur --card. */
+  --orange-encre:#ffab45;
   --slate:#0f1215; --slate-2:#191d23;
   --bg:#14171b; --bg-2:#1a1e23; --bg-3:#22272e;
   --fg:#e6e9ee; --fg-2:#a8b0bc; --fg-3:#7c8592;
@@ -62,6 +80,20 @@
 
 :root[data-theme="light"]{
   --orange:#ff8a00; --orange-d:#e67a00; --orange-soft:#fff3e2;
+  /* L'ENCRE ORANGE N'EST PAS L'ORANGE DE LA MARQUE, et c'est tout le
+     propos de ce jeton. `--orange-d` tenait DEUX rôles à la fois : encre
+     de texte, et fond de survol des boutons. Les deux tirent en sens
+     contraire — plus on fonce pour que le texte se lise sur blanc, moins
+     le texte foncé du bouton se lit sur le fond. Un seul jeton ne pouvait
+     pas les tenir.
+     Mesuré le 29/08/2026 : #e67a00 sur blanc donne 2,94:1, quand il en
+     faut 4,5 pour du texte courant et 3 pour du gros. Or c'est la couleur
+     des liens, des étiquettes de section, et des 31 GRANDS CHIFFRES qui
+     sont l'argument de ce site : ils étaient l'élément le moins lisible
+     de la page. #ac5b00 est le plus CLAIR qui tienne 4,5 sur les trois
+     fonds où il se pose — blanc 4,94, --orange-soft 4,51, --bg-2 4,61 —
+     à la teinte exacte de la marque (31,8°), qui ne bouge pas. */
+  --orange-encre:#ac5b00;
   --slate:#2f3540; --slate-2:#3c434f;
   --bg:#ffffff; --bg-2:#f6f7f9; --bg-3:#eef0f3;
   --fg:#23272e; --fg-2:#5a626e; --fg-3:#858d99;
